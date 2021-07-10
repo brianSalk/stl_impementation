@@ -1,6 +1,4 @@
-#include "forward_list.cpp"
 #include "forward_list.hpp"
-#include <cstddef>
 #include <iostream>
 #include<algorithm>
 #include <type_traits>
@@ -12,7 +10,4 @@ int main(int argc, char* argv[]) {
 	for (auto const& each : fl) {
 		std::cout << each << '\n';
 	}
-
-
-	
 }

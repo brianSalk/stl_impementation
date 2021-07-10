@@ -2,10 +2,10 @@ let SessionLoad = 1
 if &cp | set nocp | endif
 let s:cpo_save=&cpo
 set cpo&vim
-inoremap <expr> <Down> pumvisible() ? "\" : "\<Down>"
-inoremap <expr> <S-Tab> pumvisible() ? "\" : "\<S-Tab>"
-inoremap <expr> <Up> pumvisible() ? "\" : "\<Up>"
 imap <Nul> <C-Space>
+inoremap <expr> <Up> pumvisible() ? "\" : "\<Up>"
+inoremap <expr> <S-Tab> pumvisible() ? "\" : "\<S-Tab>"
+inoremap <expr> <Down> pumvisible() ? "\" : "\<Down>"
 inoremap <silent> <expr> <Plug>delimitMateS-BS delimitMate#WithinEmptyPair() ? "\<Del>" : "\<S-BS>"
 inoremap <silent> <Plug>delimitMateBS =delimitMate#BS()
 imap <F7> <Plug>(JavaComplete-Imports-RemoveUnused)
@@ -24,9 +24,9 @@ map Q gq
 omap <silent> [% <Plug>(MatchitOperationMultiBackward)
 xmap <silent> [% <Plug>(MatchitVisualMultiBackward)
 nmap <silent> [% <Plug>(MatchitNormalMultiBackward)
-nnoremap \p astd::cout << ;i
-nnoremap \m a#include <iostream>int main(int argc, char* argv[]) {std::cout << "" << std::endl;}kEEE"
 nnoremap \d :YcmShowDetailedDiagnostic
+nnoremap \m a#include <iostream>int main(int argc, char* argv[]) {std::cout << "" << std::endl;}kEEE"
+nnoremap \p astd::cout << ;i
 omap <silent> ]% <Plug>(MatchitOperationMultiForward)
 xmap <silent> ]% <Plug>(MatchitVisualMultiForward)
 nmap <silent> ]% <Plug>(MatchitNormalMultiForward)
@@ -36,6 +36,7 @@ xmap <silent> g% <Plug>(MatchitVisualBackward)
 nmap <silent> g% <Plug>(MatchitNormalBackward)
 vmap gx <Plug>NetrwBrowseXVis
 nmap gx <Plug>NetrwBrowseX
+nnoremap <SNR>66_: :=v:count ? v:count : ''
 nnoremap <SNR>65_: :=v:count ? v:count : ''
 nnoremap <silent> <Plug>(JavaComplete-Imports-SortImports) :call javacomplete#imports#SortImports()
 nnoremap <silent> <Plug>(JavaComplete-Generate-ClassInFile) :call javacomplete#newclass#CreateInFile()
@@ -131,6 +132,7 @@ argglobal
 $argadd main.cpp
 $argadd forward_list.cpp
 $argadd forward_list.h
+$argadd forward_list.hpp
 edit forward_list.h
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -146,11 +148,11 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 78 + 95) / 190)
+exe 'vert 1resize ' . ((&columns * 88 + 95) / 190)
 exe '2resize ' . ((&lines * 21 + 18) / 36)
-exe 'vert 2resize ' . ((&columns * 111 + 95) / 190)
+exe 'vert 2resize ' . ((&columns * 101 + 95) / 190)
 exe '3resize ' . ((&lines * 12 + 18) / 36)
-exe 'vert 3resize ' . ((&columns * 111 + 95) / 190)
+exe 'vert 3resize ' . ((&columns * 101 + 95) / 190)
 argglobal
 3argu
 let s:cpo_save=&cpo
@@ -296,16 +298,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 17) / 34)
+let s:l = 11 - ((10 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+11
 normal! 0
 wincmd w
 argglobal
-3argu
-if bufexists("forward_list.cpp") | buffer forward_list.cpp | else | edit forward_list.cpp | endif
+4argu
 let s:cpo_save=&cpo
 set cpo&vim
 imap <buffer> <silent> <C-G>g <Plug>delimitMateJumpMany
@@ -449,11 +450,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 10) / 21)
+let s:l = 11 - ((10 * winheight(0) + 10) / 21)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+11
 normal! 0
 wincmd w
 argglobal
@@ -609,16 +610,16 @@ normal! zt
 1
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 78 + 95) / 190)
+exe 'vert 1resize ' . ((&columns * 88 + 95) / 190)
 exe '2resize ' . ((&lines * 21 + 18) / 36)
-exe 'vert 2resize ' . ((&columns * 111 + 95) / 190)
+exe 'vert 2resize ' . ((&columns * 101 + 95) / 190)
 exe '3resize ' . ((&lines * 12 + 18) / 36)
-exe 'vert 3resize ' . ((&columns * 111 + 95) / 190)
+exe 'vert 3resize ' . ((&columns * 101 + 95) / 190)
 tabnext 1
 badd +1 main.cpp
 badd +1 forward_list.cpp
+badd +52 forward_list.h
 badd +1 forward_list.hpp
-badd +1 forward_list.h
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif

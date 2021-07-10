@@ -1,0 +1,13 @@
+stl project goals:
+locate and read the stl documents.
+create data structures from the stl library that conform as close as possible to the stl standards
+
+*****************due jul 12********************
+have the skeliton for a forward list implemented. (.h and .cpp)
+have the forward iterator (const and regular) implemented
+have the list be allocator aware.
+have at least 10 methods implemented
+***************due jul 19*********************
+come up with your own idea for a library of containers that differs from the STL.
+why is this library useful and why is it in some ways better than the STL.
+
