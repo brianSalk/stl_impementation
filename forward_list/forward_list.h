@@ -4,17 +4,26 @@
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <sys/types.h>
 #include <type_traits>
 #include <utility>
 namespace brian {
-template <typename T>
+template <typename T, typename Allocator = std::allocator<T>>
 class forward_list {
 public:
 	// forward declaration of list_iterator class template
 	template <bool IsConst> 
 	class list_iterator;
-	// aliases for iterators
+	// aliases 
+	using value_type = T;
+	using allocator_type = Allocator;
+	using size_type = size_t;
+	using difference_type = std::ptrdiff_t;
+	using reference = value_type&;
+	using const_reference = value_type const&; 
+	using pointer = typename std::allocator_traits<Allocator>::pointer;
+	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
 	using iterator = list_iterator<false>;
 	using const_iterator = list_iterator<true>;
 	// DELETE ME: this method is for debugging only
@@ -35,6 +44,7 @@ public:
 	template<typename ...Args>
 	void emplace_front(Args && ...arg);
 	const_iterator insert_after(const_iterator pos, T const& val);
+	// observers
 	const_iterator begin() const { return const_iterator(pre_head->next);}
 	iterator begin() { return iterator(pre_head->next); }
 	const_iterator end() const { return const_iterator(nullptr); }
