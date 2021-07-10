@@ -1,3 +1,4 @@
+# this .gitignore file prevents one from accidentally adding swap files created by vim, the executables which I always call main and the main.cpp which I use for debugging as well as any session files.
 */*.session
 */main*
 */main
