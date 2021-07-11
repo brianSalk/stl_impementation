@@ -38,22 +38,86 @@ public:
 	}
 	// constructors
 	forward_list();
-	forward_list(std::initializer_list<T> const& il);
+	explicit forward_list(Allocator const& alloc);
+	explicit forward_list(size_type count);
+	explicit forward_list(size_type count, Allocator const& alloc = Allocator());
+	template <typename It>
+	forward_list(It first, It last, Allocator const& alloc = Allocator());
+	forward_list(forward_list const& other);
+	forward_list(forward_list const& other, Allocator const& alloc);
+	forward_list(forward_list&& other);
+	forward_list(forward_list&& other, Allocator const& alloc);
+	forward_list(std::initializer_list<T> const& il, Allocator const& alloc = Allocator());
+
 	// mutators
 	void push_front(T const& val);
+	void push_front(T&& val);
+	void pop_front();
+	void resize(size_type count);
+	void resize(size_type count,value_type const& val);
+	void swap(forward_list& other) noexcept;
+	void merge(forward_list& other);
+	void merge(forward_list&& other);
+	template <typename Cmp>
+	void merge(forward_list& other, Cmp comp);
+	template <typename Cmp>
+	void merge(forward_list&& other, Cmp comp);
+	void splice_after(const_iterator pos, forward_list& other);
+	void splice_after(const_iterator pos, forward_list&& other); 
+	void splice_after(const_iterator pos, forward_list& other, const_iterator it);
+	void splice_after(const_iterator pos, forward_list&& other, const_iterator it);
+	void splice_after(const_iterator pos, forward_list& other, const_iterator first, const_iterator last);
+	void splice_after(const_iterator pos, forward_list&& other, const_iterator first, const_iterator last);
+	size_type remove(T const& val);
+	template <typename Pred>
+	size_type remove_if(Pred p);
+	void reverse() noexcept;
+	size_type unique();
+	template<typename Pred>
+	size_type unique(Pred p);
+	void sort();
+	template <typename Cmp>
+	void sort(Cmp comp);
+	
 	template<typename ...Args>
 	void emplace_front(Args && ...arg);
-	const_iterator insert_after(const_iterator pos, T const& val);
+	iterator insert_after(const_iterator pos, T const& val);
+	iterator insert_after(const_iterator pos, T&& value);
+	iterator insert_after(const_iterator pos, size_type count, T const& val);
+	// FIX ME: use concepts for It to make sure its an iterator
+	template <typename It>
+	iterator insert_after(const_iterator pos, It first, It last);
+	iterator insert_after(const_iterator pos, std::initializer_list<T> il);
+	template <typename ...Args>
+	iterator emplace_after(const_iterator pos, Args&& ...args);
+	iterator erase_after(const_iterator pos);
+	iterator erase_after(const_iterator first, const_iterator last);
+	forward_list& operator=(forward_list const& other);
+	forward_list& operator=(forward_list && other) noexcept;
+	forward_list& operator=(std::initializer_list<T> il);
+	void assign(size_type count, T const& value);	
+	// FIX ME: use concepts to ensure It is input-iterator
+	template<typename It>
+	void assign(It first, It last);
+	void assign(std::initializer_list<T> il);
+	void clear() noexcept;
+	~forward_list();
+
 	// observers
 	const_iterator begin() const { return const_iterator(pre_head->next);}
 	iterator begin() { return iterator(pre_head->next); }
 	const_iterator end() const { return const_iterator(nullptr); }
 	iterator end()  { return iterator(nullptr); }
-	const_iterator const_end() const { return const_iterator(nullptr); }
-	const_iterator const_begin() const { return const_iterator(pre_head->next); }
+	const_iterator cend() const { return const_iterator(nullptr); }
+	const_iterator cbegin() const { return const_iterator(pre_head->next); }
 	iterator before_begin() { return iterator(pre_head); }
 	const_iterator before_begin() const { return const_iterator(pre_head); }
 	const_iterator cbefore_begin() const { return const_iterator(pre_head); }
+	allocator_type get_allocator() const noexcept;
+	reference front();
+	const_reference front() const;
+	[[nodiscard]] bool empty() const noexcept;
+	size_type max_size() const noexcept;
 private:
 	// base_node needs to be constructed because the
 	// list must have one node before the head of the list
@@ -109,8 +173,11 @@ public:
 			reference operator*() {
 				return static_cast<derived_node*>(itr_curr)->val; 
 			}
-			bool operator!=(iterator that) const {
+			bool operator!=(list_iterator that) const {
 				return this->itr_curr != that.itr_curr;
+			}
+			bool operator==(list_iterator that) const {
+				return this->itr_curr == that.itr_curr;
 			}
 			
 		private:
@@ -119,4 +186,18 @@ public:
 	};
 
 };
+// non-member functions
+template <typename T, typename Alloc>
+bool operator==(forward_list<T,Alloc> const& lhs, forward_list<T,Alloc> const& rhs) {
+	auto lhs_curr = lhs.cbegin();
+	auto rhs_curr = rhs.cbegin();
+	while (lhs_curr != nullptr) {
+		if (rhs_curr == rhs.cend() || *lhs_curr != *rhs_curr) {
+			return false;
+		}
+		++rhs_curr;
+		++lhs_curr;
+	}
+	return true;
+}
 }
