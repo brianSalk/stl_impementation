@@ -10,4 +10,7 @@ have at least 10 methods implemented
 ***************due jul 19*********************
 come up with your own idea for a library of containers that differs from the STL.
 why is this library useful and why is it in some ways better than the STL.
+read up on how to use allocators in cpp and begin to implement the things you read.
+read about exception safety and the noexcept keyword
+implement 10 more methods to forward_list
 

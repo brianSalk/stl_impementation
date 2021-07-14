@@ -80,7 +80,8 @@ namespace brian {
 		derived_node* temp = curr;
 		while (curr != nullptr) {
 			temp = static_cast<derived_node*>(curr->next);
-			delete curr;
+			Traits::destroy(node_allocator, curr);
+			Traits::deallocate(node_allocator, curr, 1);
 			curr = temp;
 		}
 		base_node* before_begin_node = this->before_begin().itr_curr;
