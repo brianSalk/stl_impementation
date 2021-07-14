@@ -39,7 +39,6 @@ public:
 	// constructors
 	forward_list();
 	explicit forward_list(Allocator const& alloc);
-	explicit forward_list(size_type count);
 	explicit forward_list(size_type count, Allocator const& alloc = Allocator());
 	template <typename It>
 	forward_list(It first, It last, Allocator const& alloc = Allocator());
@@ -119,6 +118,7 @@ public:
 	[[nodiscard]] bool empty() const noexcept;
 	size_type max_size() const noexcept;
 private:
+	allocator_type value_allocator;
 	// base_node needs to be constructed because the
 	// list must have one node before the head of the list
 	// since we cannot assume that the template type T
@@ -140,12 +140,15 @@ private:
 		derived_node(base_node* n, T const& v) : base_node(n),
 			val(v) {}
 	};
+	using NodeAlloc_t = typename std::allocator_traits<Allocator>::template rebind_alloc<derived_node>;
+	NodeAlloc_t node_allocator;
+	using Traits = typename std::allocator_traits<NodeAlloc_t>;
 	base_node* pre_head;
 public:
 	template<bool IsConst>
 	class list_iterator {
-		friend forward_list<T>;
 		public:
+		friend forward_list<T>;
 			using value_type = T;
 			using iterator_category = std::forward_iterator_tag;
 			using difference_type = std::ptrdiff_t;
