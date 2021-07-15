@@ -119,7 +119,7 @@ namespace brian {
 				curr = static_cast<derived_node*>(curr->next);
 			}
 		} catch (...) {
-			std::cerr << "insert_after of " << count << " elements unsuccessful\n";
+			std::cerr << "insert_after of " << count << " elements unsuccessful, your data structure has not been modified\n";
 			// now clean up memory
 			Traits::destroy(node_allocator, new_node);
 			Traits::deallocate(node_allocator, new_node, 1);
