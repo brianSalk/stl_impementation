@@ -40,7 +40,8 @@ public:
 	forward_list();
 	explicit forward_list(Allocator const& alloc);
 	explicit forward_list(size_type count, Allocator const& alloc = Allocator());
-	template <typename It>
+	explicit forward_list(size_type count, T const& value, Allocator const& alloc = Allocator());
+	template <typename It, typename std::iterator_traits<decltype(std::declval<It>)>::pointer>
 	forward_list(It first, It last, Allocator const& alloc = Allocator());
 	forward_list(forward_list const& other);
 	forward_list(forward_list const& other, Allocator const& alloc);
