@@ -17,10 +17,11 @@ namespace brian {
 	
 	template <typename T, typename Allocator>
 	forward_list<T,Allocator>::forward_list(size_type count, Allocator const& alloc) : forward_list() {
-			
 		base_node* curr = pre_head;
 		for (size_t i = 0; i < count; ++i) {
-			curr->next = static_cast<base_node*>(new derived_node(T()));
+			derived_node* new_node = Traits::allocate(node_allocator, 1);	
+			Traits::construct(node_allocator,new_node,T());
+			curr->next = static_cast<base_node*>(new_node);
 			curr = curr->next;
 		}
 	}
@@ -28,11 +29,24 @@ namespace brian {
 	forward_list<T, Allocator>::forward_list(std::initializer_list<T> const& il, Allocator const& alloc) : forward_list() {
 		derived_node* curr = static_cast<derived_node*>(pre_head);
 		for (auto const& each : il)	{
-			curr->next = static_cast<base_node*>(new derived_node(each));
+			derived_node* new_node = Traits::allocate(node_allocator, 1);
+			Traits::construct(node_allocator, new_node, each);
+			curr->next = static_cast<base_node*>(new_node);
 			curr = static_cast<derived_node*>(curr->next);
 		}
-	
 	}
+	template <typename T, typename Allocator>
+	template <typename It>
+	forward_list<T,Allocator>::forward_list(It first, It last, Allocator const& alloc) : forward_list() {
+		derived_node* curr = static_cast<derived_node*>(pre_head);
+		for (auto it = first; it != last; ++it) {
+			derived_node* new_node = Traits::allocate(node_allocator,1);
+			Traits::construct(node_allocator, new_node, *it);
+			curr->next = new_node;
+			curr = static_cast<derived_node*>(curr->next);
+		}
+	}
+	// modifiers
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::push_front( T const& val) {
 		base_node* old_head = pre_head->next;
@@ -62,7 +76,9 @@ namespace brian {
 	typename forward_list<T, Allocator>::iterator forward_list<T, Allocator>::insert_after(const_iterator pos,T const& val) {
 		base_node* curr = pos.itr_curr;	
 		base_node* next_node = curr->next;
-		curr->next = static_cast<base_node*>(new derived_node(val));
+		derived_node* new_node = Traits::allocate(node_allocator,1);
+		Traits::construct(node_allocator, new_node, val);
+		curr->next = static_cast<base_node*>(new_node);
 		curr->next->next = next_node;
 		return iterator(curr);
 	}
