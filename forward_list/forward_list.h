@@ -85,7 +85,7 @@ public:
 	iterator insert_after(const_iterator pos, T&& value);
 	iterator insert_after(const_iterator pos, size_type count, T const& val);
 	// FIX ME: use concepts for It to make sure its an iterator
-	template <typename It>
+	template <typename It, typename decltype(std::declval<It>)::pointer>
 	iterator insert_after(const_iterator pos, It first, It last);
 	iterator insert_after(const_iterator pos, std::initializer_list<T> il);
 	template <typename ...Args>

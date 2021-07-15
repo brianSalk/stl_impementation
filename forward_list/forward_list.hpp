@@ -101,6 +101,43 @@ namespace brian {
 		return iterator(curr);
 	}
 	template <typename T, typename Allocator>
+	typename forward_list<T,Allocator>::iterator forward_list<T, Allocator>::insert_after(const_iterator pos, size_type count, T const& val) {
+		if (count == 0) return iterator(pos.itr_curr);
+		base_node* pos_node = pos.itr_curr;
+		// create list starting from sublist_head inside try block, then after try-block connect it to the rest of your list
+		derived_node* sublist_head = nullptr;
+		derived_node* curr = nullptr;
+		derived_node* new_node = nullptr;
+		try {
+			sublist_head = Traits::allocate(node_allocator,1);
+			Traits::construct(node_allocator, sublist_head, val);
+			curr = sublist_head;
+			for (size_t i {0}; i < count-1; ++i) {
+				new_node = Traits::allocate(node_allocator, 1);
+				Traits::construct(node_allocator, new_node, val);
+				curr->next = static_cast<base_node*>(new_node);
+				curr = static_cast<derived_node*>(curr->next);
+			}
+		} catch (...) {
+			std::cerr << "insert_after of " << count << " elements unsuccessful\n";
+			// now clean up memory
+			Traits::destroy(node_allocator, new_node);
+			Traits::deallocate(node_allocator, new_node, 1);
+			curr = sublist_head;
+			derived_node* temp = nullptr;
+			while (curr != nullptr) {
+				temp = curr;
+				curr = static_cast<derived_node*>(curr->next);
+				Traits::destroy(node_allocator, temp);
+				Traits::deallocate(node_allocator, temp, 1);
+			}
+			return iterator(pos.itr_curr);
+		}
+		curr->next = pos.itr_curr->next;
+		pos.itr_curr->next = sublist_head;
+		return iterator(static_cast<base_node*>(curr));
+	}
+	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::~forward_list() {
 		derived_node* curr = static_cast<derived_node*>(this->begin().itr_curr);	
 		derived_node* temp = curr;
