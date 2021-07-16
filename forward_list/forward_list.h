@@ -39,7 +39,9 @@ public:
 	// constructors
 	forward_list();
 	explicit forward_list(Allocator const& alloc);
+	// T must be DefaultInsertable in order to participate in this overload
 	explicit forward_list(size_type count, Allocator const& alloc = Allocator());
+	// t must be 
 	explicit forward_list(size_type count, T const& value, Allocator const& alloc = Allocator());
 	template <typename It, typename std::iterator_traits<It>::pointer = nullptr>
 	forward_list(It first, It last, Allocator const& alloc = Allocator());
@@ -193,6 +195,11 @@ private:
 	derived_node* create_node(T const& val) {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		Traits::construct(node_allocator, new_node, val);
+		return new_node;
+	}
+	derived_node* create_default_node() {
+		derived_node* new_node = Traits::allocate(node_allocator,1);
+		Traits::construct(node_allocator, new_node);
 		return new_node;
 	}
 

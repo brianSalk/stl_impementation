@@ -1,4 +1,5 @@
 #include "forward_list.h"
+#include <concepts>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
@@ -14,13 +15,12 @@ namespace brian {
 	forward_list<T,Allocator>::forward_list(Allocator const& alloc) :forward_list() {
 		value_allocator = alloc;
 	}
-	
+		
 	template <typename T, typename Allocator>
 	forward_list<T,Allocator>::forward_list(size_type count, Allocator const& alloc) : forward_list(alloc) {
 		base_node* curr = pre_head;
 		for (size_t i = 0; i < count; ++i) {
-			derived_node* new_node = Traits::allocate(node_allocator, 1);	
-			Traits::construct(node_allocator,new_node,T());
+			derived_node* new_node = create_default_node();
 			curr->next = static_cast<base_node*>(new_node);
 			curr = curr->next;
 		}
@@ -41,6 +41,7 @@ namespace brian {
 			this->clear();
 		}
 	}
+	// T must be CopyInsertable
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(size_type count, T const& value, Allocator const& alloc) : forward_list(alloc) {
 		base_node* curr = pre_head;
@@ -54,7 +55,7 @@ namespace brian {
 		}
 		catch (...) {
 			clear();
-			std::cerr << "constructor call failed\n";
+			std::cerr << "constructor call unsuccessful\n";
 			delete_node(new_node);
 		}
 	}
@@ -120,7 +121,7 @@ namespace brian {
 			new_node = create_node(val);
 		}
 		catch (...) {
-			std::cerr << "push_front of " << val << " unsuccessful\n";
+			std::cerr << "push_front unsuccessful\n";
 			delete_node(new_node);
 			return;
 		}
@@ -135,7 +136,7 @@ namespace brian {
 			new_node = create_node(std::move(val));
 		} 
 		catch (...) {
-			std::cerr << "push_front unsuccessful";
+			std::cerr << "push_front unsuccessful\n";
 			delete_node(new_node);
 			return;
 		}
@@ -174,7 +175,7 @@ namespace brian {
 			derived_node* new_node = create_node(val);
 		}
 		catch (...) {
-			std::cerr << "element with value " << val << "not inserted due to exception\n";
+			std::cerr << "element with value not inserted due to exception\n";
 			delete_node(new_node);
 			return iterator(pos.itr_curr);
 		}
@@ -257,5 +258,14 @@ namespace brian {
 
 		}
 		pre_head->next = nullptr;
+	}
+	// observers
+	template <typename T, typename Allocator>
+	T& forward_list<T, Allocator>::front() {
+		return static_cast<derived_node*>(pre_head->next)->val;	
+	}
+	template <typename T, typename Allocator>
+	T const& forward_list<T, Allocator>::front() const {
+		return static_cast<derived_node*>(pre_head->next)->val;
 	}
 }
