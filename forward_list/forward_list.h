@@ -211,6 +211,10 @@ private:
 		Traits::destroy(node_allocator, node);
 		Traits::deallocate(node_allocator, node, 1);
 	}
+	void delete_node(base_node* node) {
+		Traits::destroy(node_allocator, static_cast<derived_node*>(node));
+		Traits::deallocate(node_allocator, static_cast<derived_node*>(node), 1);
+	}
 };
 // non-member functions
 template <typename T, typename Alloc>

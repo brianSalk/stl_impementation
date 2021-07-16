@@ -142,6 +142,14 @@ namespace brian {
 		pre_head->next = static_cast<base_node*>(new_node);
 		pre_head->next->next = old_head;
 	}
+	// I am not sure if a type-catch block in nessasary to provide exception safety
+	// for any of the destructive methods
+	template <typename T, typename Allocator>
+	void forward_list<T, Allocator>::pop_front() {
+		base_node* old_head = pre_head->next;
+		pre_head->next = old_head->next;
+		delete_node(old_head);
+	}
 	template <typename T, typename Allocator>
 	template <typename ...Args>
 	void forward_list<T, Allocator>::emplace_front(Args && ...args) {
