@@ -28,10 +28,10 @@ namespace brian {
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(std::initializer_list<T> const& il, Allocator const& alloc) : forward_list(alloc) {
 		derived_node* curr = static_cast<derived_node*>(pre_head);
+		derived_node* new_node = nullptr;
 		try {
 			for (auto const& each : il)	{
-				derived_node* new_node = Traits::allocate(node_allocator, 1);
-				Traits::construct(node_allocator, new_node, each);
+				new_node = create_node(each);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = static_cast<derived_node*>(curr->next);
 			}
@@ -44,38 +44,101 @@ namespace brian {
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(size_type count, T const& value, Allocator const& alloc) : forward_list(alloc) {
 		base_node* curr = pre_head;
-		for (size_t i {0}; i < count; ++i) {
-			derived_node* new_node = Traits::allocate(node_allocator, 1);
-			Traits::construct(node_allocator, new_node, value);
-			curr->next = static_cast<base_node*>(new_node);
-			curr = curr->next;
+		derived_node* new_node = nullptr;
+		try {
+			for (size_t i {0}; i < count; ++i) {
+				new_node = create_node(value);
+				curr->next = static_cast<base_node*>(new_node);
+				curr = curr->next;
+			}
+		}
+		catch (...) {
+			clear();
+			std::cerr << "constructor call failed\n";
+			delete_node(new_node);
 		}
 	}
 	template <typename T, typename Allocator>
-	template <typename It, typename std::iterator_traits<decltype(std::declval<It>)>::pointer>
+	template <typename It, typename std::iterator_traits<It>::pointer>
 	forward_list<T,Allocator>::forward_list(It first, It last, Allocator const& alloc) : forward_list(alloc) {
 		derived_node* curr = static_cast<derived_node*>(pre_head);
-		for (auto it = first; it != last; ++it) {
-			derived_node* new_node = Traits::allocate(node_allocator,1);
-			Traits::construct(node_allocator, new_node, *it);
-			curr->next = new_node;
-			curr = static_cast<derived_node*>(curr->next);
+		derived_node* new_node = nullptr;
+		try {
+			for (auto it = first; it != last; ++it) {
+				new_node = create_node(*it);
+				curr->next = new_node;
+				curr = static_cast<derived_node*>(curr->next);
+			}
 		}
+		catch (...) {
+			std::cerr << "call to constructor unsuccessful\n";
+			clear();
+			delete_node(new_node);
+		}
+	}
+	template <typename T, typename Allocator>
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> const& other):forward_list() {
+		// copy all of other to this.
+		base_node* curr = this->pre_head;
+		derived_node* other_curr = static_cast<derived_node*>(other.pre_head->next);
+		derived_node* new_node = nullptr;
+		try {
+			while (other_curr != nullptr) {
+				// why does this not call create_node(T const& val) ?
+				// why does other->val not evaluate to type T?
+				new_node = create_node(other_curr->val);
+				curr->next = static_cast<base_node*>(new_node);
+				curr = curr->next;
+				other_curr = static_cast<derived_node*>(other_curr->next);
+			}
+		}
+		catch(...) {
+			std::cerr << "constructor call unsuccessfull\n";
+			clear();
+			delete_node(new_node);
+		}
+	}
+	template <typename T, typename Allocator>
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> const& other, Allocator const& alloc) : forward_list(other){
+		value_allocator = alloc;
+	}
+	template <typename T, typename Allocator>
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) {
+		pre_head = other.pre_head;
+		other.pre_head = nullptr;
+	}
+	template <typename T, typename Allocator>
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other, Allocator const& alloc) : forward_list(std::move(other)) {
+		value_allocator = alloc;
 	}
 	// modifiers
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::push_front( T const& val) {
 		base_node* old_head = pre_head->next;
-		derived_node* new_node = Traits::allocate(node_allocator, 1);
-		Traits::construct(node_allocator,new_node, val);
+		derived_node* new_node = nullptr;
+		try {
+			new_node = create_node(val);
+		}
+		catch (...) {
+			std::cerr << "push_front of " << val << " unsuccessful\n";
+			delete_node(new_node);
+			return;
+		}
 		pre_head->next = static_cast<base_node*>(new_node);
 		pre_head->next->next = old_head;
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::push_front(T &&val) {
 		base_node* old_head = pre_head->next;
-		derived_node* new_node = Traits::allocate(node_allocator,1);
-		Traits::construct(node_allocator, new_node,val);
+		derived_node* new_node = nullptr; 
+		try {
+			new_node = create_node(std::move(val));
+		} 
+		catch (...) {
+			std::cerr << "push_front unsuccessful";
+			delete_node(new_node);
+			return;
+		}
 		pre_head->next = static_cast<base_node*>(new_node);
 		pre_head->next->next = old_head;
 	}
@@ -89,6 +152,7 @@ namespace brian {
 		}
 		catch (...) {
 			std::cerr << "could not emplace_front\n";
+			delete_node(new_head);
 			return;
 		}
 		pre_head->next = static_cast<base_node*>(new_head);
@@ -103,6 +167,7 @@ namespace brian {
 		}
 		catch (...) {
 			std::cerr << "element with value " << val << "not inserted due to exception\n";
+			delete_node(new_node);
 			return iterator(pos.itr_curr);
 		}
 		curr->next = static_cast<base_node*>(new_node);
@@ -118,6 +183,7 @@ namespace brian {
 			new_node = create_node(std::move(val));
 		} catch (...) {
 			std::cerr << "value " << val << " not inserted due to exception\n";
+			delete_node(new_node);
 			return iterator(pos.itr_curr);
 		}
 		curr->next = static_cast<base_node*>(new_node);
@@ -152,8 +218,7 @@ namespace brian {
 			while (curr != nullptr) {
 				temp = curr;
 				curr = static_cast<derived_node*>(curr->next);
-				Traits::destroy(node_allocator, temp);
-				Traits::deallocate(node_allocator, temp, 1);
+				delete_node(temp);
 			}
 			return iterator(pos.itr_curr);
 		}
@@ -168,6 +233,7 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {
+		if (pre_head == nullptr) return;
 		derived_node* curr = static_cast<derived_node*>(pre_head->next);
 		derived_node* temp  = curr;
 		try {
@@ -180,10 +246,8 @@ namespace brian {
 		}
 		catch (...) {
 			std::cerr << "element threw an exception upon destruction/deallocation, you may have leaked memory\n";
-			pre_head->next = nullptr;
 
 		}
 		pre_head->next = nullptr;
-
 	}
 }
