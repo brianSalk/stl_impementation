@@ -26,6 +26,35 @@ public:
 	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
 	using iterator = list_iterator<false>;
 	using const_iterator = list_iterator<true>;
+private:
+
+	allocator_type value_allocator;
+	// base_node needs to be constructed because the
+	// list must have one node before the head of the list
+	// since we cannot assume that the template type T
+	// has a default constructor, we cannot instantiate the
+	// type using the default constructor, therefor we need a
+	// special node called base_node for the first node of the list
+	struct base_node {
+		base_node* next;
+		base_node() : next(nullptr){}
+		base_node(base_node* n) : next(n) {}
+	};
+	struct derived_node : base_node {
+		T val;
+		derived_node() : base_node() {} 
+		template <typename ...Args>
+		derived_node(Args && ...args) : val(std::forward<Args>(args)...) {}
+		//FIX ME: why do i need to use the baseclass name when
+		//referencing a baseclass member here?
+		derived_node(base_node* n, T const& v) : base_node(n),
+			val(v) {}
+	};
+	using NodeAlloc_t = typename std::allocator_traits<Allocator>::template rebind_alloc<derived_node>;
+	NodeAlloc_t node_allocator;
+	using Traits = typename std::allocator_traits<NodeAlloc_t>;
+	base_node* pre_head;
+public:
 	// DELETE ME: this method is for debugging only
 	void dump() const { 
 		std::cout << "DUMP" << std::endl;
@@ -121,32 +150,6 @@ public:
 	[[nodiscard]] bool empty() const noexcept;
 	size_type max_size() const noexcept;
 private:
-	allocator_type value_allocator;
-	// base_node needs to be constructed because the
-	// list must have one node before the head of the list
-	// since we cannot assume that the template type T
-	// has a default constructor, we cannot instantiate the
-	// type using the default constructor, therefor we need a
-	// special node called base_node for the first node of the list
-	struct base_node {
-		base_node* next;
-		base_node() : next(nullptr){}
-		base_node(base_node* n) : next(n) {}
-	};
-	struct derived_node : base_node {
-		T val;
-		derived_node() : base_node() {} 
-		template <typename ...Args>
-		derived_node(Args && ...args) : val(std::forward<Args>(args)...) {}
-		//FIX ME: why do i need to use the baseclass name when
-		//referencing a baseclass member here?
-		derived_node(base_node* n, T const& v) : base_node(n),
-			val(v) {}
-	};
-	using NodeAlloc_t = typename std::allocator_traits<Allocator>::template rebind_alloc<derived_node>;
-	NodeAlloc_t node_allocator;
-	using Traits = typename std::allocator_traits<NodeAlloc_t>;
-	base_node* pre_head;
 	template<bool IsConst>
 	class list_iterator {
 		public:
