@@ -259,6 +259,12 @@ namespace brian {
 		}
 		pre_head->next = nullptr;
 	}
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::swap(forward_list& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value) {
+		base_node* tmp = other.pre_head;
+		other.pre_head = this->pre_head;
+		this->pre_head = tmp;
+	}
 	// observers
 	template <typename T, typename Allocator>
 	T& forward_list<T, Allocator>::front() {

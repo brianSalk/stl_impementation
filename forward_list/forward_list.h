@@ -86,7 +86,7 @@ public:
 	void pop_front();
 	void resize(size_type count);
 	void resize(size_type count,value_type const& val);
-	void swap(forward_list& other) noexcept;
+	void swap(forward_list& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value);
 	void merge(forward_list& other);
 	void merge(forward_list&& other);
 	template <typename Cmp>
