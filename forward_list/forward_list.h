@@ -11,10 +11,10 @@
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>>
 class forward_list {
-public:
 	// forward declaration of list_iterator class template
 	template <bool IsConst> 
 	class list_iterator;
+public:
 	// aliases 
 	using value_type = T;
 	using allocator_type = Allocator;
@@ -147,7 +147,6 @@ private:
 	NodeAlloc_t node_allocator;
 	using Traits = typename std::allocator_traits<NodeAlloc_t>;
 	base_node* pre_head;
-public:
 	template<bool IsConst>
 	class list_iterator {
 		public:
@@ -190,7 +189,6 @@ public:
 			base_node* itr_curr;
 
 	};
-private:
 	// helper methods
 	derived_node* create_node(T const& val) {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
