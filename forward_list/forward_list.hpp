@@ -298,6 +298,18 @@ namespace brian {
 		end_of_other->next = rest_of_this;
 		other.pre_head->next = nullptr;
 	}
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::splice_after(const_iterator pos, forward_list&& other) {
+		base_node* rest_of_this = pos.itr_curr->next;
+		pos.itr_curr->next = other.pre_head->next;
+		// find end of other
+		base_node* end_of_other = other.pre_head;
+		while (end_of_other->next != nullptr) {
+			end_of_other = end_of_other->next;
+		}
+		end_of_other->next = rest_of_this;
+		other.pre_head->next = nullptr;
+	}
 	// FIX ME: im pretty sure this can be optimized
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::splice_after(const_iterator pos, forward_list& other, const_iterator it) {
