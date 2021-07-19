@@ -144,10 +144,10 @@ public:
 	iterator before_begin() { return iterator(pre_head); }
 	const_iterator before_begin() const { return const_iterator(pre_head); }
 	const_iterator cbefore_begin() const { return const_iterator(pre_head); }
-	allocator_type get_allocator() const noexcept;
+	allocator_type get_allocator() const noexcept { return value_allocator; }
 	reference front();
 	const_reference front() const;
-	[[nodiscard]] bool empty() const noexcept;
+	[[nodiscard]] bool empty() const noexcept { return pre_head->next == nullptr; }
 	size_type max_size() const noexcept;
 private:
 	template<bool IsConst>

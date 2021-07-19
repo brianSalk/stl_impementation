@@ -77,9 +77,11 @@ namespace brian {
 			delete_node(new_node);
 		}
 	}
+	// copy constructor
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> const& other):forward_list() {
-		// copy all of other to this.
+		// FIX ME: Do I need to create a new node_allocator after this?
+		value_allocator = std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator()); 
 		base_node* curr = this->pre_head;
 		derived_node* other_curr = static_cast<derived_node*>(other.pre_head->next);
 		derived_node* new_node = nullptr;
@@ -99,18 +101,37 @@ namespace brian {
 			delete_node(new_node);
 		}
 	}
+	// allocator extended copy constructor
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> const& other, Allocator const& alloc) : forward_list(other){
 		value_allocator = alloc;
 	}
+	// move constructor
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) {
+		value_allocator = std::move(other.value_allocator);
 		pre_head = other.pre_head;
 		other.pre_head = nullptr;
 	}
+	// move constructor allocator extended
+	// the else condition is probably wrong and needs to be tested
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other, Allocator const& alloc) : forward_list(std::move(other)) {
-		value_allocator = alloc;
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other, Allocator const& alloc) {
+		if (alloc == other.get_allocator()) {
+			value_allocator = std::move(other.value_allocator);
+			pre_head = other.pre_head;
+		} else {
+			base_node* other_curr = other.pre_head;
+			base_node* this_curr = this->pre_head;
+			base_node* other_temp;
+			// point this_curr to other_curr then point other curr off
+			while (other_curr != nullptr) {
+				other_temp = other_curr;
+				other_curr = other_curr->next;
+				this_curr = std::move(other_temp);
+			}
+		}
+		other.pre_head = nullptr;
 	}
 	// modifiers
 	template <typename T, typename Allocator>
@@ -264,6 +285,29 @@ namespace brian {
 		base_node* tmp = other.pre_head;
 		other.pre_head = this->pre_head;
 		this->pre_head = tmp;
+	}
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::splice_after(const_iterator pos, forward_list& other) {
+		base_node* rest_of_this = pos.itr_curr->next;
+		pos.itr_curr->next = other.pre_head->next;
+		// find end of other
+		base_node* end_of_other = other.pre_head;
+		while (end_of_other->next != nullptr) {
+			end_of_other = end_of_other->next;
+		}
+		end_of_other->next = rest_of_this;
+		other.pre_head->next = nullptr;
+	}
+	// FIX ME: im pretty sure this can be optimized
+	template <typename T, typename Allocator>
+	void forward_list<T, Allocator>::splice_after(const_iterator pos, forward_list& other, const_iterator it) {
+		if (pos == it || pos == ++it) return;
+		base_node* node_to_spice_from_other = it.itr_curr->next;
+		base_node* rest_of_this = pos.itr_curr->next;
+		base_node* rest_of_other = it.itr_curr->next->next;
+		pos.itr_curr->next = node_to_spice_from_other;
+		node_to_spice_from_other->next = rest_of_this;
+		it.itr_curr->next = rest_of_other;
 	}
 	// observers
 	template <typename T, typename Allocator>
