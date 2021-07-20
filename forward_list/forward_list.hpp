@@ -161,7 +161,7 @@ namespace brian {
 		// if we do not want to assign other.get_allocator() to this, then the old and new iterators will be equal
 		// if old_alloc == new_alloc, you may reuse the memory and just reassign the values	
 		base_node* this_curr = this->pre_head->next;
-		base_node* this_temp;
+		base_node* this_temp = this->pre_head;
 		base_node* other_curr = other.pre_head->next;
 		while (this_curr != nullptr && other_curr != nullptr) {
 			this_temp = this_curr;
