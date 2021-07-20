@@ -194,6 +194,7 @@ private:
 	};
 	// helper methods
 	derived_node* create_node(T const& val) {
+		// std::cout << "node created\n";
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		Traits::construct(node_allocator, new_node, val);
 		return new_node;
@@ -205,12 +206,14 @@ private:
 	}
 
 	derived_node* create_node(T && val) {
+		// std::cout << "node created\n";
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		Traits::construct(node_allocator, new_node, val);
 		return new_node;
 	}
 	template <typename ...Args>
 	derived_node* create_node(Args &&... args) {
+		// std::cout << "node created\n";
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		Traits::construct(node_allocator, new_node, std::forward<Args>(args)...);
 		return new_node;

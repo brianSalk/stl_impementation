@@ -121,6 +121,7 @@ namespace brian {
 			value_allocator = std::move(other.value_allocator);
 			pre_head = other.pre_head;
 		} else {
+			value_allocator = std::move(other.value_allocator);
 			base_node* other_curr = other.pre_head;
 			base_node* this_curr = this->pre_head;
 			base_node* other_temp;
@@ -133,6 +134,68 @@ namespace brian {
 		}
 		other.pre_head = nullptr;
 	}
+	// operator
+	template <typename T, typename Allocator>
+	forward_list<T,Allocator>& forward_list<T, Allocator>::operator=(forward_list const& other) {
+		// check if we shoud assign other.get_allocator() to this
+		if (std::allocator_traits<decltype(other.value_allocator)>::propagate_on_container_copy_assignment::value) {
+			auto old_alloc = value_allocator;
+			auto new_alloc = other.value_allocator;
+			// if old != new, deallocate with old_alloc and allocate with new_alloc
+			if (old_alloc != new_alloc) {
+				clear();
+				value_allocator = new_alloc;
+				base_node* this_curr = this->pre_head;
+				base_node* other_curr = other.pre_head->next;
+
+				while (other_curr != nullptr) {
+					derived_node* new_node;
+					new_node = create_node(static_cast<derived_node*>(other_curr)->val);
+					this_curr->next = static_cast<base_node*>(new_node);
+					this_curr = this_curr->next;
+					other_curr = other_curr->next;
+				}
+				return *this;
+			} 
+		}
+		// if we do not want to assign other.get_allocator() to this, then the old and new iterators will be equal
+		// if old_alloc == new_alloc, you may reuse the memory and just reassign the values	
+		base_node* this_curr = this->pre_head->next;
+		base_node* this_temp;
+		base_node* other_curr = other.pre_head->next;
+		while (this_curr != nullptr && other_curr != nullptr) {
+			this_temp = this_curr;
+			static_cast<derived_node*>(this_curr)->val = static_cast<derived_node*>(other_curr)->val;
+			this_curr = this_curr->next;
+			other_curr = other_curr->next;
+		}
+		// if this is longer than other, we need to delete the extra nodes in this
+		if (this_curr != nullptr && other_curr == nullptr) {
+			// delete extra nodes in this, point temp to nullptr
+			this_temp->next = nullptr;
+			while (this_curr != nullptr) {
+				this_temp = this_curr;
+				this_curr = this_curr->next;
+				delete_node(this_temp);
+			}
+		}
+		// if other is longer than this, we need to allocate more space to add the extra nodes to this
+		else if (this_curr == nullptr && other_curr != nullptr) {
+			while (other_curr != nullptr) {
+				this_temp->next = static_cast<base_node*>(create_node(static_cast<derived_node*>(other_curr)->val));
+				this_temp = this_temp->next;
+				other_curr = other_curr->next;
+			}
+			this_temp->next = nullptr;
+		}
+		// if they are both the same length, just point this_temp->next to nullptr
+		else {
+			this_temp->next = nullptr;
+		}
+		
+		return *this;
+	}
+	 
 	// modifiers
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::push_front( T const& val) {
