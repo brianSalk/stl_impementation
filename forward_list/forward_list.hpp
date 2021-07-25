@@ -228,7 +228,7 @@ namespace brian {
 			return *this;
 		}
 	} 
-	 
+
 	// modifiers
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::push_front( T const& val) {

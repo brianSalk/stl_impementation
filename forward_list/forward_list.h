@@ -232,13 +232,13 @@ template <typename T, typename Alloc>
 bool operator==(forward_list<T,Alloc> const& lhs, forward_list<T,Alloc> const& rhs) {
 	auto lhs_curr = lhs.cbegin();
 	auto rhs_curr = rhs.cbegin();
-	while (lhs_curr != nullptr) {
+	while (lhs_curr != lhs.end()) {
 		if (rhs_curr == rhs.cend() || *lhs_curr != *rhs_curr) {
 			return false;
 		}
 		++rhs_curr;
 		++lhs_curr;
 	}
-	return true;
+	return rhs_curr == rhs.end();
 }
 }
