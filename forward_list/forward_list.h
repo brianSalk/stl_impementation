@@ -226,19 +226,23 @@ private:
 		Traits::destroy(node_allocator, static_cast<derived_node*>(node));
 		Traits::deallocate(node_allocator, static_cast<derived_node*>(node), 1);
 	}
+
+	// non-member functions
+	friend bool operator==(forward_list<T,Allocator> const& lhs, forward_list<T,Allocator> const& rhs) {
+		auto lhs_curr = lhs.cbegin();
+		auto rhs_curr = rhs.cbegin();
+		while (lhs_curr != lhs.end()) {
+			if (rhs_curr == rhs.cend() || *lhs_curr != *rhs_curr) {
+				return false;
+			}
+			++rhs_curr;
+			++lhs_curr;
+		}
+		return rhs_curr == rhs.end();
+	}
+//	friend bool operator<=>(forward_list<T,Allocator> const& lhs, forward_list<T,Allcoator> const& rhs) {
+//
+//	}
 };
 // non-member functions
-template <typename T, typename Alloc>
-bool operator==(forward_list<T,Alloc> const& lhs, forward_list<T,Alloc> const& rhs) {
-	auto lhs_curr = lhs.cbegin();
-	auto rhs_curr = rhs.cbegin();
-	while (lhs_curr != lhs.end()) {
-		if (rhs_curr == rhs.cend() || *lhs_curr != *rhs_curr) {
-			return false;
-		}
-		++rhs_curr;
-		++lhs_curr;
-	}
-	return rhs_curr == rhs.end();
-}
 }
