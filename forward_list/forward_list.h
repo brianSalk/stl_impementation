@@ -270,7 +270,6 @@ public:
 			++rhs_curr;
 			++lhs_curr;
 		}
-		std::cout << "same_len\n";
 	// return equal if rhs and lhs are same length, else rhs is longer so return less
 		if (lhs_curr == nullptr && rhs_curr != nullptr) {
 			return std::strong_ordering::less;
