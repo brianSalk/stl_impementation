@@ -124,7 +124,7 @@ public:
 	iterator erase_after(const_iterator pos);
 	iterator erase_after(const_iterator first, const_iterator last);
 	forward_list& operator=(forward_list const& other);
-	forward_list& operator=(forward_list && other) noexcept;
+	forward_list& operator=(forward_list && other) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value);
 	forward_list& operator=(std::initializer_list<T> il);
 	void assign(size_type count, T const& value);	
 	// FIX ME: use concepts to ensure It is input-iterator

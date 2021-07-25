@@ -134,7 +134,8 @@ namespace brian {
 		}
 		other.pre_head = nullptr;
 	}
-	// operator
+	// operators
+	// copy assignment
 	template <typename T, typename Allocator>
 	forward_list<T,Allocator>& forward_list<T, Allocator>::operator=(forward_list const& other) {
 		// check if we shoud assign other.get_allocator() to this
@@ -195,6 +196,38 @@ namespace brian {
 		
 		return *this;
 	}
+	// move assignment
+	template <typename T, typename Allocator>
+	forward_list<T,Allocator>& forward_list<T,Allocator>::operator=(forward_list && other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value) {
+		if (std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value) {
+			this->value_allocator = std::move(other.get_allocator());
+		}	
+		if (this->value_allocator == other.get_allocator()) {
+		// now empty this
+		this->clear();
+		// this points to first value of other
+		this->before_begin().itr_curr->next = other.begin().itr_curr;
+		// other is now empty and valid
+		other.before_begin().itr_curr->next = nullptr;
+		return *this;
+		}
+		else {
+			// if we got here we ARE NOT propagating the other allocator, so just use the old one
+			// first we clear this
+			this->clear();
+			// now we loop through other and move each element to this
+			base_node* other_curr = other.begin().itr_curr;
+			base_node* this_curr = this->before_begin().itr_curr;
+			while (other_curr != nullptr) {
+				derived_node* new_node = create_node(std::move(static_cast<derived_node*>(other_curr)->val));
+				this_curr->next = static_cast<base_node*>(new_node);
+				this_curr = this_curr->next;
+				other_curr = other_curr->next;
+			}
+			other.pre_head->next = nullptr;
+			return *this;
+		}
+	} 
 	 
 	// modifiers
 	template <typename T, typename Allocator>
