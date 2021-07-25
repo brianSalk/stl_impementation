@@ -8,6 +8,8 @@
 #include <sys/types.h> 
 #include <type_traits>
 #include <utility>
+#include <compare>
+#include <algorithm>
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>>
 class forward_list {
@@ -226,8 +228,11 @@ private:
 		Traits::destroy(node_allocator, static_cast<derived_node*>(node));
 		Traits::deallocate(node_allocator, static_cast<derived_node*>(node), 1);
 	}
+	// default comparison operators
+	
 
 	// non-member functions
+	// TO DO: I want to optimize this by using the itr_curr and obviating all the iterator constructions, but this is tough because itr_curr is private to list_iterator<bool>
 	friend bool operator==(forward_list<T,Allocator> const& lhs, forward_list<T,Allocator> const& rhs) {
 		auto lhs_curr = lhs.cbegin();
 		auto rhs_curr = rhs.cbegin();
@@ -240,9 +245,40 @@ private:
 		}
 		return rhs_curr == rhs.end();
 	}
-//	friend bool operator<=>(forward_list<T,Allocator> const& lhs, forward_list<T,Allcoator> const& rhs) {
-//
-//	}
+	// hopefully compare_3way will be implemented by the standard library soon, if not this will have to suffice
+	static std::strong_ordering compare_3way(std::three_way_comparable auto a, std::three_way_comparable auto b) {
+		return a <=> b;
+	}	
+	template <typename U>
+	static std::strong_ordering compare_3way(U const& a, U const& b) {
+		if (a < b) {
+			return std::strong_ordering::less;
+		} else {
+			return std::strong_ordering::greater;
+		}
+	}
+public:
+	friend std::strong_ordering operator<=>(forward_list const& lhs,forward_list const& rhs) {
+		auto lhs_curr = lhs.cbegin();
+		auto rhs_curr = rhs.cbegin();
+		while (rhs_curr != nullptr && lhs_curr != nullptr) {
+			if (rhs_curr == nullptr) {
+				return std::strong_ordering::greater;
+			} else if (*lhs_curr != *rhs_curr) {
+				return compare_3way(*lhs_curr, *rhs_curr);
+			}
+			++rhs_curr;
+			++lhs_curr;
+		}
+		std::cout << "same_len\n";
+	// return equal if rhs and lhs are same length, else rhs is longer so return less
+		if (lhs_curr == nullptr && rhs_curr != nullptr) {
+			return std::strong_ordering::less;
+		} else if (rhs_curr == lhs_curr) {
+			return std::strong_ordering::equal;
+		} else {
+			return std::strong_ordering::greater;
+		}
+	}
 };
-// non-member functions
 }
