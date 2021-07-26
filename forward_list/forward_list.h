@@ -118,7 +118,7 @@ public:
 	iterator insert_after(const_iterator pos, T&& value);
 	iterator insert_after(const_iterator pos, size_type count, T const& val);
 	// FIX ME: use concepts for It to make sure its an iterator
-	template <typename It, typename decltype(std::declval<It>)::pointer>
+	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	iterator insert_after(const_iterator pos, It first, It last);
 	iterator insert_after(const_iterator pos, std::initializer_list<T> il);
 	template <typename ...Args>
@@ -228,6 +228,46 @@ private:
 		Traits::destroy(node_allocator, static_cast<derived_node*>(node));
 		Traits::deallocate(node_allocator, static_cast<derived_node*>(node), 1);
 	}
+	template <typename U>
+	void __splice_after(const_iterator pos,U  && other) {
+		std::cout << "called\n";
+		base_node* rest_of_this = pos.itr_curr->next;
+		pos.itr_curr->next = other.pre_head->next;
+		// find end of other
+		base_node* end_of_other = other.pre_head;
+		while (end_of_other->next != nullptr) {
+			end_of_other = end_of_other->next;
+		}
+		end_of_other->next = rest_of_this;
+		other.pre_head->next = nullptr;
+	}
+	// FIX ME: im pretty sure this can be optimized
+	template <typename U>
+	void __splice_after(const_iterator pos, U && other, const_iterator it) {
+		if (pos == it || pos == ++it) return;
+		base_node* node_to_spice_from_other = it.itr_curr->next;
+		base_node* rest_of_this = pos.itr_curr->next;
+		base_node* rest_of_other = it.itr_curr->next->next;
+		pos.itr_curr->next = node_to_spice_from_other;
+		node_to_spice_from_other->next = rest_of_this;
+		it.itr_curr->next = rest_of_other;
+	}
+	template <typename U>
+	void __splice_after(const_iterator pos, U && other, const_iterator first, const_iterator last) {
+		// move elements from the range (first, last) after pos		
+		base_node* node_to_spice_from_other = first.itr_curr->next;
+		base_node* rest_of_this = pos.itr_curr->next;
+		base_node* rest_of_other = last.itr_curr->next;
+		base_node* other_curr = node_to_spice_from_other;
+		base_node* this_curr = pos.itr_curr;
+		while (other_curr != last.itr_curr) {
+			this_curr->next = other_curr;
+			this_curr = this_curr->next;
+			other_curr = other_curr->next;
+		}
+		this_curr->next = rest_of_this;
+		first.itr_curr->next = last.itr_curr;
+	}
 	// default comparison operators
 	
 
@@ -245,18 +285,6 @@ private:
 		}
 		return rhs_curr == rhs.end();
 	}
-	// hopefully compare_3way will be implemented by the standard library soon, if not this will have to suffice
-	static std::strong_ordering compare_3way(std::three_way_comparable auto a, std::three_way_comparable auto b) {
-		return a <=> b;
-	}	
-	template <typename U>
-	static std::strong_ordering compare_3way(U const& a, U const& b) {
-		if (a < b) {
-			return std::strong_ordering::less;
-		} else {
-			return std::strong_ordering::greater;
-		}
-	}
 public:
 	friend std::strong_ordering operator<=>(forward_list const& lhs,forward_list const& rhs) {
 		auto lhs_curr = lhs.cbegin();
@@ -265,7 +293,7 @@ public:
 			if (rhs_curr == nullptr) {
 				return std::strong_ordering::greater;
 			} else if (*lhs_curr != *rhs_curr) {
-				return compare_3way(*lhs_curr, *rhs_curr);
+				return *lhs_curr <=> *rhs_curr;
 			}
 			++rhs_curr;
 			++lhs_curr;

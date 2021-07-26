@@ -353,6 +353,42 @@ namespace brian {
 		return iterator(static_cast<base_node*>(curr));
 	}
 	template <typename T, typename Allocator>
+	template <typename It, typename std::iterator_traits<It>::pointer >
+	typename forward_list<T,Allocator>::iterator 
+	forward_list<T,Allocator>::insert_after(const_iterator pos, It first, It last) {
+		auto this_first = pos;			
+		auto this_rest = ++pos;
+		base_node* temp_head = nullptr;
+		base_node* new_node = nullptr;
+		derived_node* curr = nullptr;
+		try {
+			// create a new new list, if it succeeds, insert it into this,
+			// if it fails, clean up all the memory
+			curr = create_node(*first);
+			temp_head = curr;
+			for (auto other_it = ++first; other_it != last; ++other_it) {
+				new_node = static_cast<base_node*>(create_node(*other_it));
+				curr->next = new_node;
+				curr = static_cast<derived_node*>(curr->next);
+			}
+		} catch (...) {
+			// if an excpetion is thrown, clean up all memory	
+			delete_node(new_node);
+			derived_node* temp = static_cast<derived_node*>(temp_head);
+			derived_node* c = static_cast<derived_node*>(temp_head);
+			while(c != nullptr) {
+				temp = c;
+				c = static_cast<derived_node*>(c->next);
+				delete_node(temp);
+			}
+			return iterator(pos.itr_curr);
+		}
+		// if no exception was thrown, insert the new list
+		this_first.itr_curr->next = temp_head;
+		curr->next = this_rest.itr_curr; 
+		return iterator(curr);
+	}
+	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::~forward_list() {
 		clear();
 		delete pre_head;
@@ -384,38 +420,27 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T,Allocator>::splice_after(const_iterator pos, forward_list& other) {
-		base_node* rest_of_this = pos.itr_curr->next;
-		pos.itr_curr->next = other.pre_head->next;
-		// find end of other
-		base_node* end_of_other = other.pre_head;
-		while (end_of_other->next != nullptr) {
-			end_of_other = end_of_other->next;
-		}
-		end_of_other->next = rest_of_this;
-		other.pre_head->next = nullptr;
+		__splice_after(pos,std::forward<forward_list>(other));
 	}
 	template <typename T, typename Allocator>
-	void forward_list<T,Allocator>::splice_after(const_iterator pos, forward_list&& other) {
-		base_node* rest_of_this = pos.itr_curr->next;
-		pos.itr_curr->next = other.pre_head->next;
-		// find end of other
-		base_node* end_of_other = other.pre_head;
-		while (end_of_other->next != nullptr) {
-			end_of_other = end_of_other->next;
-		}
-		end_of_other->next = rest_of_this;
-		other.pre_head->next = nullptr;
+	void forward_list<T,Allocator>::splice_after(const_iterator pos, forward_list && other) {
+		__splice_after(pos, std::forward<forward_list>(other));
 	}
-	// FIX ME: im pretty sure this can be optimized
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::splice_after(const_iterator pos, forward_list& other, const_iterator it) {
-		if (pos == it || pos == ++it) return;
-		base_node* node_to_spice_from_other = it.itr_curr->next;
-		base_node* rest_of_this = pos.itr_curr->next;
-		base_node* rest_of_other = it.itr_curr->next->next;
-		pos.itr_curr->next = node_to_spice_from_other;
-		node_to_spice_from_other->next = rest_of_this;
-		it.itr_curr->next = rest_of_other;
+		__splice_after(pos, std::forward<forward_list>(other), it);
+	}
+	template <typename T, typename Allocator>
+	void forward_list<T, Allocator>::splice_after(const_iterator pos, forward_list&& other, const_iterator it) {
+		__splice_after(pos, std::forward<forward_list>(other), it);
+	}
+	template <typename T, typename Allocator>
+	void forward_list<T, Allocator>::splice_after(const_iterator pos, forward_list & other, const_iterator first, const_iterator last) {
+		__splice_after(pos, std::forward<forward_list>(other), first, last);
+	}
+	template <typename T, typename Allocator>
+	void forward_list<T, Allocator>::splice_after(const_iterator pos, forward_list && other, const_iterator first, const_iterator last) {
+		__splice_after(pos, std::forward<forward_list>(other), first, last);
 	}
 	// observers
 	template <typename T, typename Allocator>
