@@ -375,8 +375,6 @@ namespace brian {
 //			curr = Traits::allocate(node_allocator, 1);
 //			Traits::construct(node_allocator, curr, *first);
 			curr = create_node(*first);
-			// QUESTION: calling curr = create_node(*first); creates my
-			//+node just fine, but for some reason it will not free the memory
 			temp_head = curr;
 			for (auto other_it = ++first; other_it != last; ++other_it) {
 				// allocate and construct new node
@@ -404,6 +402,37 @@ namespace brian {
 		this_first.itr_curr->next = temp_head;
 		curr->next = this_rest.itr_curr; 
 		return iterator(curr);
+	}
+	template <typename T, typename Allocator>
+	typename forward_list<T,Allocator>::iterator
+	forward_list<T,Allocator>::insert_after(const_iterator pos, std::initializer_list<T> il) {
+		derived_node* temp_head;
+		derived_node* temp_curr;
+		try {
+
+			auto il_it = il.begin();
+			temp_head = create_node(*il_it++);
+			temp_curr = temp_head;
+			for (auto it = il_it; it != il.end(); ++it) {
+				temp_curr->next = static_cast<base_node*>(create_node(*it));
+				temp_curr = static_cast<derived_node*>(temp_curr->next);
+			}
+		}
+		catch (...) {
+			std::cerr << "insert_after failed\n";
+			derived_node* rm_curr = temp_head;
+			derived_node* rm_temp;
+			while (rm_curr != nullptr) {
+				rm_temp = rm_curr;
+				rm_curr = static_cast<derived_node*>(rm_curr->next);
+				delete_node(rm_temp);
+			}
+			return iterator(pos.itr_curr);
+		}
+		derived_node* rest_of_this = static_cast<derived_node*>(pos.itr_curr->next);
+		pos.itr_curr->next = static_cast<derived_node*>(temp_head);
+		temp_curr->next = static_cast<base_node*>(rest_of_this);		
+		return iterator(temp_curr);
 	}
 	template <typename T, typename Allocator>
 	template <typename ... Args>
