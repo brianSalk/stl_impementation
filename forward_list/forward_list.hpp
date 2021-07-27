@@ -33,7 +33,8 @@ namespace brian {
 		try {
 			for (auto const& each : il)	{
 				//new_node = create_node(each);
-			
+				new_node = Traits::allocate(node_allocator, 1);
+				Traits::construct(node_allocator, new_node, each);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = static_cast<derived_node*>(curr->next);
 			}
@@ -376,8 +377,9 @@ namespace brian {
 			temp_head = curr;
 			for (auto other_it = ++first; other_it != last; ++other_it) {
 				// allocate and construct new node
-				new_node = Traits::allocate(node_allocator, 1);
-				Traits::construct(node_allocator, curr, *other_it);
+				new_node = create_node(std::move(*other_it));
+//				new_node = Traits::allocate(node_allocator, 1);
+//				Traits::construct(node_allocator, curr, *other_it);
 				curr->next = new_node;
 				curr = static_cast<derived_node*>(curr->next);
 			}
@@ -393,7 +395,6 @@ namespace brian {
 				delete_node(temp);
 				std::cout << "deleted\n";
 			}
-			delete_node(new_node);
 			return iterator(pos.itr_curr);
 		}
 		// if no exception was thrown, insert the new list
