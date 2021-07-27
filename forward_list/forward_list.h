@@ -202,33 +202,23 @@ private:
 	//+up just fine!
 	//+I will leave them here and I will leave them commented out in the code
 	//+that way if I ever figure out what is going on I can put them back.
-	derived_node* create_node(T const& val) {
-		std::cout << "node created\n";
-		derived_node* new_node = Traits::allocate(node_allocator,1);
-		Traits::construct(node_allocator, new_node, val);
-		return new_node;
-	}
 	derived_node* create_default_node() {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		Traits::construct(node_allocator, new_node);
 		return new_node;
 	}
-
-	derived_node* create_node(T && val) {
-		std::cout << "node created with move\n";
-		derived_node* new_node = Traits::allocate(node_allocator,1);
-		Traits::construct(node_allocator, new_node, std::forward<T>(val));
-		return new_node;
-	}
+	// QUESTION: is there any reason to have the other overloads like move and const& if I already have this?
+	// QUESTION: should I make a way to distinguish between allocate throwing and
+	// construct throwing??
 	template <typename ...Args>
 	derived_node* create_node(Args && ...args) {
-		std::cout << "created in template\n";
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		try {
 		Traits::construct(node_allocator, new_node, std::forward<Args>(args)...);
 		} catch (...) {
 			delete_node(new_node);
-			throw int();
+			new_node = nullptr;
+			throw;
 		}
 		return new_node;
 	}

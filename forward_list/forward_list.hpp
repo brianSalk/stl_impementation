@@ -29,12 +29,13 @@ namespace brian {
 	forward_list<T, Allocator>::forward_list(std::initializer_list<T> const& il, Allocator const& alloc) : forward_list(alloc) {
 		derived_node* curr = static_cast<derived_node*>(pre_head);
 		derived_node* new_node = nullptr;
-		
+		// QUESTION: why can i not catch this exception
 		try {
 			for (auto const& each : il)	{
 				//new_node = create_node(each);
-				new_node = Traits::allocate(node_allocator, 1);
-				Traits::construct(node_allocator, new_node, each);
+//				new_node = Traits::allocate(node_allocator, 1);
+//				Traits::construct(node_allocator, new_node, each);
+				new_node = create_node(each);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = static_cast<derived_node*>(curr->next);
 			}
@@ -61,7 +62,6 @@ namespace brian {
 		catch (...) {
 			clear();
 			std::cerr << "constructor call unsuccessful\n";
-			delete_node(new_node);
 		}
 	}
 	template <typename T, typename Allocator>
@@ -330,13 +330,15 @@ namespace brian {
 		derived_node* curr = nullptr;
 		derived_node* new_node = nullptr;
 		try {
-			sublist_head = Traits::allocate(node_allocator,1);
-			Traits::construct(node_allocator, sublist_head, val);
+//			sublist_head = Traits::allocate(node_allocator,1);
+//			Traits::construct(node_allocator, sublist_head, val);
+			sublist_head = creaet_node(val);
 			
 			curr = sublist_head;
 			for (size_t i {0}; i < count-1; ++i) {
-				new_node = Traits::allocate(node_allocator, 1);
-				Traits::construct(node_allocator, new_node, val);
+//				new_node = Traits::allocate(node_allocator, 1);
+//				Traits::construct(node_allocator, new_node, val);
+				new_node = create_node(val);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = static_cast<derived_node*>(curr->next);
 			}
@@ -370,8 +372,9 @@ namespace brian {
 		try {
 			// create a new new list, if it succeeds, insert it into this,
 			// if it fails, clean up all the memory
-			curr = Traits::allocate(node_allocator, 1);
-			Traits::construct(node_allocator, curr, *first);
+//			curr = Traits::allocate(node_allocator, 1);
+//			Traits::construct(node_allocator, curr, *first);
+			curr = create_node(*first);
 			// QUESTION: calling curr = create_node(*first); creates my
 			//+node just fine, but for some reason it will not free the memory
 			temp_head = curr;
@@ -407,8 +410,9 @@ namespace brian {
 	typename forward_list<T,Allocator>::iterator forward_list<T, Allocator>::emplace_after(const_iterator pos, Args && ...args) {
 		derived_node* new_node = nullptr;
 		try {
-			new_node = Traits::allocate(node_allocator,1);
-			Traits::construct(node_allocator,new_node, std::forward<Args>(args)...);
+//			new_node = Traits::allocate(node_allocator,1);
+//			Traits::construct(node_allocator,new_node, std::forward<Args>(args)...);
+			new_node = create_node(std::forward<Args>(args)...);
 		} catch (...) {
 			std::cerr << "emplace_after failed\n";
 			delete_node(new_node);
@@ -433,8 +437,7 @@ namespace brian {
 			while (curr != nullptr) {
 				temp = curr;
 				curr = static_cast<derived_node*>(curr->next);
-				Traits::destroy(node_allocator, temp);
-				Traits::deallocate(node_allocator, temp, 1);
+				delete_node(temp);
 			}
 		}
 		catch (...) {
