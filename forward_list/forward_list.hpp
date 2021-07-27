@@ -233,6 +233,37 @@ namespace brian {
 			return *this;
 		}
 	} 
+	template <typename T, typename Allocator>
+	forward_list<T,Allocator>& 
+	forward_list<T,Allocator>::operator=(std::initializer_list<T> il) {
+		// QUESTION: can I reassign the existing nodes in this	
+		//+or do I need to delete them all and reallocate them?
+		derived_node* temp_curr;
+		derived_node* temp_head;
+		auto il_it = il.begin();
+		try {
+			temp_head = create_node(*il_it++);
+			temp_curr = temp_head;
+			for (auto it = il_it; it != il.end(); ++it) {
+				temp_curr->next = static_cast<base_node*>(create_node(*it));
+				temp_curr = static_cast<derived_node*>(temp_curr->next);
+			}	
+		} catch (...) {
+			std::cerr << "operator= failed\n";
+			derived_node* rm_curr = temp_head;
+			derived_node* rm_temp;
+			while (rm_curr != nullptr) {
+				rm_temp = rm_curr;
+				rm_curr = static_cast<derived_node*>(rm_curr->next);
+				delete_node(rm_temp);
+			}
+			return *this;
+		}
+		
+		this->clear();
+		this->pre_head->next = static_cast<base_node*>(temp_head);
+		return *this;
+	}
 
 	// modifiers
 	template <typename T, typename Allocator>
