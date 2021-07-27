@@ -29,9 +29,11 @@ namespace brian {
 	forward_list<T, Allocator>::forward_list(std::initializer_list<T> const& il, Allocator const& alloc) : forward_list(alloc) {
 		derived_node* curr = static_cast<derived_node*>(pre_head);
 		derived_node* new_node = nullptr;
+		
 		try {
 			for (auto const& each : il)	{
-				new_node = create_node(each);
+				//new_node = create_node(each);
+			
 				curr->next = static_cast<base_node*>(new_node);
 				curr = static_cast<derived_node*>(curr->next);
 			}
@@ -48,7 +50,9 @@ namespace brian {
 		derived_node* new_node = nullptr;
 		try {
 			for (size_t i {0}; i < count; ++i) {
-				new_node = create_node(value);
+				//new_node = create_node(value);
+				new_node = Traits::allocate(node_allocator,1);
+				Traits::construct(node_allocator,new_node,value);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = curr->next;
 			}
@@ -289,7 +293,7 @@ namespace brian {
 		base_node* curr = pos.itr_curr;	
 		base_node* new_node = curr->next;
 		try {
-			derived_node* new_node = create_node(val);
+			new_node = create_node(val);
 		}
 		catch (...) {
 			std::cerr << "element with value not inserted due to exception\n";
@@ -327,6 +331,7 @@ namespace brian {
 		try {
 			sublist_head = Traits::allocate(node_allocator,1);
 			Traits::construct(node_allocator, sublist_head, val);
+			
 			curr = sublist_head;
 			for (size_t i {0}; i < count-1; ++i) {
 				new_node = Traits::allocate(node_allocator, 1);
@@ -358,35 +363,60 @@ namespace brian {
 	forward_list<T,Allocator>::insert_after(const_iterator pos, It first, It last) {
 		auto this_first = pos;			
 		auto this_rest = ++pos;
-		base_node* temp_head = nullptr;
-		base_node* new_node = nullptr;
+		derived_node* temp_head = nullptr;
+		derived_node* new_node = nullptr;
 		derived_node* curr = nullptr;
 		try {
 			// create a new new list, if it succeeds, insert it into this,
 			// if it fails, clean up all the memory
-			curr = create_node(*first);
+			curr = Traits::allocate(node_allocator, 1);
+			Traits::construct(node_allocator, curr, *first);
+			// QUESTION: calling curr = create_node(*first); creates my
+			//+node just fine, but for some reason it will not free the memory
 			temp_head = curr;
 			for (auto other_it = ++first; other_it != last; ++other_it) {
-				new_node = static_cast<base_node*>(create_node(*other_it));
+				// allocate and construct new node
+				new_node = Traits::allocate(node_allocator, 1);
+				Traits::construct(node_allocator, curr, *other_it);
 				curr->next = new_node;
 				curr = static_cast<derived_node*>(curr->next);
 			}
 		} catch (...) {
-			// if an excpetion is thrown, clean up all memory	
-			delete_node(new_node);
-			derived_node* temp = static_cast<derived_node*>(temp_head);
-			derived_node* c = static_cast<derived_node*>(temp_head);
+			std::cerr << "insert_after failed\n";
+		
+			derived_node* temp = temp_head;
+			derived_node* c = temp_head;
 			while(c != nullptr) {
 				temp = c;
+				std::cout << "temp->val = " << temp->val << '\n';
 				c = static_cast<derived_node*>(c->next);
 				delete_node(temp);
+				std::cout << "deleted\n";
 			}
+			delete_node(new_node);
 			return iterator(pos.itr_curr);
 		}
 		// if no exception was thrown, insert the new list
 		this_first.itr_curr->next = temp_head;
 		curr->next = this_rest.itr_curr; 
 		return iterator(curr);
+	}
+	template <typename T, typename Allocator>
+	template <typename ... Args>
+	typename forward_list<T,Allocator>::iterator forward_list<T, Allocator>::emplace_after(const_iterator pos, Args && ...args) {
+		derived_node* new_node = nullptr;
+		try {
+			new_node = Traits::allocate(node_allocator,1);
+			Traits::construct(node_allocator,new_node, std::forward<Args>(args)...);
+		} catch (...) {
+			std::cerr << "emplace_after failed\n";
+			delete_node(new_node);
+			return iterator(pos.itr_curr);
+		}
+		base_node* next_node = pos.itr_curr->next;
+		pos.itr_curr->next = static_cast<base_node*>(new_node);
+		new_node->next = next_node;
+		return iterator(new_node);
 	}
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::~forward_list() {

@@ -47,10 +47,6 @@ private:
 		derived_node() : base_node() {} 
 		template <typename ...Args>
 		derived_node(Args && ...args) : val(std::forward<Args>(args)...) {}
-		//FIX ME: why do i need to use the baseclass name when
-		//referencing a baseclass member here?
-		derived_node(base_node* n, T const& v) : base_node(n),
-			val(v) {}
 	};
 	using NodeAlloc_t = typename std::allocator_traits<Allocator>::template rebind_alloc<derived_node>;
 	NodeAlloc_t node_allocator;
@@ -130,7 +126,7 @@ public:
 	forward_list& operator=(std::initializer_list<T> il);
 	void assign(size_type count, T const& value);	
 	// FIX ME: use concepts to ensure It is input-iterator
-	template<typename It>
+	template<typename It, typename std::iterator_traits<It>::pointer>
 	void assign(It first, It last);
 	void assign(std::initializer_list<T> il);
 	void clear() noexcept;
@@ -149,6 +145,9 @@ public:
 	allocator_type get_allocator() const noexcept { return value_allocator; }
 	reference front();
 	const_reference front() const;
+	// constructs in c++ surrounded in [[ ... ]] are known as attributes
+	// the nodiscard attribute creates a compiler warning if the value of a
+	// method is not evaluated or assigned
 	[[nodiscard]] bool empty() const noexcept { return pre_head->next == nullptr; }
 	size_type max_size() const noexcept;
 private:
@@ -195,6 +194,14 @@ private:
 
 	};
 	// helper methods
+	// I thought these helper functions would be a great idea
+	//+it turns out that for some reason if an exception is thrown,
+	//+then the catch block cannot properly deallocate memory that was created
+	//+within these helper functions.
+	//+even weirder, if no exeption is thrown, the destructor cleans everything
+	//+up just fine!
+	//+I will leave them here and I will leave them commented out in the code
+	//+that way if I ever figure out what is going on I can put them back.
 	derived_node* create_node(T const& val) {
 		// std::cout << "node created\n";
 		derived_node* new_node = Traits::allocate(node_allocator,1);
@@ -210,12 +217,11 @@ private:
 	derived_node* create_node(T && val) {
 		// std::cout << "node created\n";
 		derived_node* new_node = Traits::allocate(node_allocator,1);
-		Traits::construct(node_allocator, new_node, val);
+		Traits::construct(node_allocator, new_node, std::forward<T>(val));
 		return new_node;
 	}
 	template <typename ...Args>
-	derived_node* create_node(Args &&... args) {
-		// std::cout << "node created\n";
+	derived_node* create(Args && ...args) {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		Traits::construct(node_allocator, new_node, std::forward<Args>(args)...);
 		return new_node;
@@ -223,10 +229,11 @@ private:
 	void delete_node(derived_node* node) {
 		Traits::destroy(node_allocator, node);
 		Traits::deallocate(node_allocator, node, 1);
+		std::cout << "deleted derived_node\n";
 	}
-	void delete_node(base_node* node) {
-		Traits::destroy(node_allocator, static_cast<derived_node*>(node));
-		Traits::deallocate(node_allocator, static_cast<derived_node*>(node), 1);
+	void delete_base_node(base_node* node) {
+		Traits::destroy(node_allocator, node);
+		Traits::deallocate(node_allocator, node, 1);
 	}
 	template <typename U>
 	void __splice_after(const_iterator pos,U  && other) {
