@@ -105,6 +105,7 @@ public:
 	void reverse() noexcept;
 	size_type unique();
 	template<typename Pred>
+	requires std::predicate<Pred,T,T>
 	size_type unique(Pred p);
 	void sort();
 	template <typename Cmp>
@@ -272,6 +273,8 @@ private:
 		this_curr->next = rest_of_this;
 		first.itr_curr->next = last.itr_curr;
 	}
+	// FIX ME:
+	// make sure that this algo is still exception safe even if pred throws.
 	template <typename Pred>
 	size_type __remove(Pred p) {
 		derived_node* curr = static_cast<derived_node*>(pre_head->next);
@@ -287,12 +290,37 @@ private:
 					delete_node(del_node);
 				} catch (...) {
 					curr = del_node;
-					temp ->next = curr;
-					std::cout << "in catch\n";
+					temp->next = curr;
 					return count;
 				}
 			}
 			temp->next = curr;
+			temp = curr;
+			if (curr != nullptr)
+				curr = static_cast<derived_node*>(curr->next);
+		}
+		return count;
+	}
+	template <typename Pred>
+	size_t __unique(Pred const& p) {
+		size_t count = 0;
+		if (!pre_head->next || !pre_head->next->next) return count;
+		derived_node* curr = static_cast<derived_node*>(pre_head->next->next);
+		derived_node* temp = static_cast<derived_node*>(pre_head->next);
+		derived_node* del_node;
+		while (curr != nullptr) {
+			while(curr && p(temp->val,curr->val)) {
+				count++;
+				del_node = curr;
+				curr = static_cast<derived_node*>(curr->next);
+				try {
+					delete_node(del_node);
+				} catch (...) {
+					temp->next = del_node;
+					return count;
+				}
+			}
+			temp->next = static_cast<base_node*>(curr);
 			temp = curr;
 			if (curr != nullptr)
 				curr = static_cast<derived_node*>(curr->next);

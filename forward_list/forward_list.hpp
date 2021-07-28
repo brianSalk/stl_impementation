@@ -1,4 +1,5 @@
 #include "forward_list.h"
+#include <bits/c++config.h>
 #include <concepts>
 #include <ctime>
 #include <functional>
@@ -587,4 +588,15 @@ namespace brian {
 		two->next = one;
 		pre_head->next = two;
 	}
+	template <typename T, typename Allocator>
+	std::size_t forward_list<T,Allocator>::unique() {
+		return __unique([](T const& a, T const& b){return a == b;});
+	}
+	template <typename T, typename Allocator>
+	template <typename Pred>
+	requires std::predicate<Pred,T,T>
+	std::size_t forward_list<T,Allocator>::unique(Pred p) {
+		return __unique(p);
+	}
+	
 }
