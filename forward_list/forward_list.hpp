@@ -1,5 +1,6 @@
 #include "forward_list.h"
 #include <concepts>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
@@ -544,5 +545,19 @@ namespace brian {
 	template <typename T, typename Allocator>
 	T const& forward_list<T, Allocator>::front() const {
 		return static_cast<derived_node*>(pre_head->next)->val;
+	}
+	// algorithms
+	// this algorithm provides a basic exception guarentee, meaning that
+	// if an element throws upon deletion, the forward list will be left in a 
+	// valid state and no memory is leaked
+	template <typename T, typename Allocator>
+	std::size_t	forward_list<T,Allocator>::remove(T const& val) {
+		return __remove([val](T const& v){return val == v;});
+	}
+	template <typename T, typename Allocator>
+	template<typename Pred>
+	requires std::predicate<Pred,T>
+	std::size_t forward_list<T,Allocator>::remove_if(Pred p) {
+		return __remove(p);
 	}
 }

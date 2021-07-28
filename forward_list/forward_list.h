@@ -97,8 +97,10 @@ public:
 	void splice_after(const_iterator pos, forward_list&& other, const_iterator it);
 	void splice_after(const_iterator pos, forward_list& other, const_iterator first, const_iterator last);
 	void splice_after(const_iterator pos, forward_list&& other, const_iterator first, const_iterator last);
+	// algorithms
 	size_type remove(T const& val);
 	template <typename Pred>
+	requires std::predicate<Pred,T>
 	size_type remove_if(Pred p);
 	void reverse() noexcept;
 	size_type unique();
@@ -225,7 +227,6 @@ private:
 	void delete_node(derived_node* node) {
 		Traits::destroy(node_allocator, node);
 		Traits::deallocate(node_allocator, node, 1);
-		std::cout << "deleted derived_node\n";
 	}
 	void delete_base_node(base_node* node) {
 		Traits::destroy(node_allocator, node);
@@ -270,6 +271,33 @@ private:
 		}
 		this_curr->next = rest_of_this;
 		first.itr_curr->next = last.itr_curr;
+	}
+	template <typename Pred>
+	size_type __remove(Pred p) {
+		derived_node* curr = static_cast<derived_node*>(pre_head->next);
+		derived_node* temp = static_cast<derived_node*>(pre_head);
+		derived_node* del_node;
+		size_t count = 0;
+		while (curr != nullptr) {
+			while (curr != nullptr && p(curr->val)) {
+				count++;
+				del_node = curr;
+				curr = static_cast<derived_node*>(curr->next);
+				try {
+					delete_node(del_node);
+				} catch (...) {
+					curr = del_node;
+					temp ->next = curr;
+					std::cout << "in catch\n";
+					return count;
+				}
+			}
+			temp->next = curr;
+			temp = curr;
+			if (curr != nullptr)
+				curr = static_cast<derived_node*>(curr->next);
+		}
+		return count;
 	}
 	// default comparison operators
 	
