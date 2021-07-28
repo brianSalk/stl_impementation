@@ -1,5 +1,6 @@
 #include "forward_list.h"
 #include <concepts>
+#include <ctime>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -559,5 +560,31 @@ namespace brian {
 	requires std::predicate<Pred,T>
 	std::size_t forward_list<T,Allocator>::remove_if(Pred p) {
 		return __remove(p);
+	}
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::reverse() noexcept {
+		base_node* one = pre_head->next, *two, *three;
+		if (one && one->next) {
+			two = one->next;
+		} else {
+			return;
+		}
+		if (two && two->next) {
+			three = two->next;
+		} else {
+			two->next = one;
+			pre_head->next = two;
+			one->next = nullptr;
+			return;
+		}
+		one->next = nullptr;
+		while (three != nullptr) {
+			two->next = one;
+			one = two;
+			two = three;
+			three = three->next;
+		}
+		two->next = one;
+		pre_head->next = two;
 	}
 }
