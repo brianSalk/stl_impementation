@@ -2,5 +2,6 @@
 */*.session
 */main*
 */main
-*/*.swp
+*/.*
+.*
 */questions
