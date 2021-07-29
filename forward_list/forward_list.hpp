@@ -317,8 +317,7 @@ namespace brian {
 		if (first != last) {
 			// we need to allocate more nodes
 			while (first != last) {
-				temp->next = create_node(2);
-				first++;
+				temp->next = create_node(*first++);
 				temp = temp->next;
 			}
 		} else {
@@ -333,6 +332,10 @@ namespace brian {
 			}
 			last_node->next = nullptr;
 		}
+	}
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::assign(std::initializer_list<T> il) {
+		this->assign(il.begin(), il.end());
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::push_front( T const& val) {
