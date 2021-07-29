@@ -2,6 +2,7 @@
 #include <bits/c++config.h>
 #include <concepts>
 #include <ctime>
+#include <forward_list>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -604,4 +605,27 @@ namespace brian {
 				std::forward<forward_list>(other), 
 				[](T const& a, T const& b){return a < b;});
 	}
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::merge(forward_list && other) {
+		__merge(std::forward<forward_list>(*this),
+				std::forward<forward_list>(other),
+				[](T const& a, T const& b){return a < b;});
+	}
+	template <typename T, typename Allocator>
+	template <typename Cmp>
+	requires std::predicate<Cmp,T,T>
+	void forward_list<T,Allocator>::merge(forward_list& other,Cmp cmp) {
+		__merge(std::forward<forward_list>(*this),
+				std::forward<forward_list>(other),
+				cmp);
+	}
+	template <typename T, typename Allocator>
+	template <typename Cmp>
+	requires std::predicate<Cmp,T,T>
+	void forward_list<T,Allocator>::merge(forward_list&& other, Cmp cmp) {
+		__merge(std::forward<forward_list>(*this),
+				std::forward<forward_list>(other),
+				cmp);
+	}
+
 } 

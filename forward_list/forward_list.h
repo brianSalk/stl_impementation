@@ -88,8 +88,10 @@ public:
 	void merge(forward_list& other);
 	void merge(forward_list&& other);
 	template <typename Cmp>
+	requires std::predicate<Cmp,T,T>
 	void merge(forward_list& other, Cmp comp);
 	template <typename Cmp>
+	requires std::predicate<Cmp,T,T>
 	void merge(forward_list&& other, Cmp comp);
 	void splice_after(const_iterator pos, forward_list& other);
 	void splice_after(const_iterator pos, forward_list&& other); 
