@@ -131,7 +131,7 @@ public:
 	forward_list& operator=(std::initializer_list<T> il);
 	void assign(size_type count, T const& value);	
 	// FIX ME: use concepts to ensure It is input-iterator
-	template<typename It, typename std::iterator_traits<It>::pointer>
+	template<typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	void assign(It first, It last);
 	void assign(std::initializer_list<T> il);
 	void clear() noexcept;
@@ -181,7 +181,7 @@ private:
 			list_iterator<IsConst> operator++(int) {
 				auto cp = itr_curr;
 				itr_curr = itr_curr->next;
-				return const_iterator(cp);
+				return list_iterator(cp);
 			}
 			// derference operator
 			reference operator*() {

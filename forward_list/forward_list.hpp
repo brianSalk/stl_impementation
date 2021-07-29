@@ -287,7 +287,7 @@ namespace brian {
 			while (this_count < count) {
 				// we need to allocate more nodes
 				temp->next = static_cast<base_node*>(create_node(val));
-				temp = static_cast<derived_node*>(temp->next);
+				temp = temp->next;
 				++this_count;
 			}
 		}
@@ -302,6 +302,36 @@ namespace brian {
 				delete_base_node(del_node);
 			}
 			last_node->next=nullptr;
+		}
+	}
+	template <typename T, typename Allocator>
+	template <typename It, typename std::iterator_traits<It>::pointer>
+	void forward_list<T,Allocator>::assign(It first, It last) {
+		derived_node* this_curr = static_cast<derived_node*>(this->begin().itr_curr);
+		base_node* temp = this->before_begin().itr_curr;
+		while (first != last && this_curr != nullptr) {
+			temp = this_curr;
+			this_curr->val = *first++;
+			this_curr = static_cast<derived_node*>(this_curr->next);
+		}
+		if (first != last) {
+			// we need to allocate more nodes
+			while (first != last) {
+				temp->next = create_node(2);
+				first++;
+				temp = temp->next;
+			}
+		} else {
+			// we need to delete nodes
+			base_node* last_node = temp;
+			base_node* del_node;
+			temp = temp->next;
+			while (temp != nullptr) {
+				del_node = temp;
+				temp = temp->next;
+				delete_base_node(del_node);
+			}
+			last_node->next = nullptr;
 		}
 	}
 	template <typename T, typename Allocator>
