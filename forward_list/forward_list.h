@@ -233,7 +233,7 @@ private:
 	}
 	void delete_base_node(base_node* node) {
 		Traits::destroy(node_allocator, node);
-		Traits::deallocate(node_allocator, node, 1);
+		Traits::deallocate(node_allocator, static_cast<derived_node*>(node), 1);
 	}
 	template <typename U>
 	void __splice_after(const_iterator pos,U  && other) {
