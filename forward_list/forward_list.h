@@ -328,6 +328,48 @@ private:
 		}
 		return count;
 	}
+	template <typename Cmp>
+	forward_list<T,Allocator>& __merge(forward_list && lhs,
+		forward_list && rhs, Cmp less) {
+		// reconnect nodes, moving them form rhs to lhs.
+		derived_node* r_curr = static_cast<derived_node*>(rhs.begin().itr_curr);
+		derived_node* l_curr = static_cast<derived_node*>(lhs.begin().itr_curr);
+		derived_node* temp_head;
+		if (l_curr != nullptr && r_curr != nullptr) {
+			if (less(l_curr->val, r_curr->val)) {
+				temp_head = l_curr;
+				l_curr = static_cast<derived_node*>(l_curr->next);
+			} else {
+				temp_head = r_curr;
+				r_curr = static_cast<derived_node*>(r_curr->next);
+			}
+		}
+		derived_node* temp_curr = temp_head;
+		while (l_curr != nullptr && r_curr != nullptr) {
+			if (less(l_curr->val,r_curr->val)) {
+				// add l_curr to list
+				temp_curr->next = static_cast<base_node*>(l_curr);
+				l_curr = static_cast<derived_node*>(l_curr->next);
+			} else {
+				temp_curr->next = static_cast<base_node*>(r_curr);
+				r_curr = static_cast<derived_node*>(r_curr->next);
+			}
+			temp_curr = static_cast<derived_node*>(temp_curr->next);
+		}
+		while (l_curr != nullptr) {
+			temp_curr->next = static_cast<base_node*>(l_curr);
+			l_curr = static_cast<derived_node*>(l_curr->next);
+			temp_curr = static_cast<derived_node*>(temp_curr->next);
+		}
+		while (r_curr != nullptr) {
+			temp_curr->next = static_cast<base_node*>(r_curr);
+			r_curr = static_cast<derived_node*>(r_curr->next);
+			temp_curr = static_cast<derived_node*>(temp_curr->next);
+		}
+		lhs.before_begin().itr_curr->next = static_cast<base_node*>(temp_head);
+		rhs.before_begin().itr_curr->next = nullptr;
+		return *this;
+	}
 	// default comparison operators
 	
 

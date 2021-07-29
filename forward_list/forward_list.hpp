@@ -598,5 +598,10 @@ namespace brian {
 	std::size_t forward_list<T,Allocator>::unique(Pred p) {
 		return __unique(p);
 	}
-	
-} //
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::merge(forward_list & other) {
+		__merge(std::forward<forward_list>(*this), 
+				std::forward<forward_list>(other), 
+				[](T const& a, T const& b){return a < b;});
+	}
+} 
