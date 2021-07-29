@@ -268,8 +268,42 @@ namespace brian {
 		this->pre_head->next = static_cast<base_node*>(temp_head);
 		return *this;
 	}
-
+	
 	// modifiers
+	// assign provides a basic exception guarentee
+	// if an excption is thrown from assign, there will be no leaks
+	template <typename T, typename Allocator>
+	void forward_list<T,Allocator>::assign(size_type count, T const& val) {
+		derived_node* this_curr = static_cast<derived_node*>(this->begin().itr_curr);
+		base_node* temp = this->before_begin().itr_curr;
+		size_type this_count = 0;
+		while (this_curr != nullptr && this_count < count) {
+			temp = this_curr;
+			this_curr->val = val;
+			this_curr = static_cast<derived_node*>(this_curr->next);
+			++this_count;
+		}
+		if (this_count < count) {
+			while (this_count < count) {
+				// we need to allocate more nodes
+				temp->next = static_cast<base_node*>(create_node(val));
+				temp = static_cast<derived_node*>(temp->next);
+				++this_count;
+			}
+		}
+		else {
+			// we need to delete the extra nodes
+			base_node* last_node = temp;
+			temp = temp->next;
+			base_node* del_node;
+			while (temp != nullptr) {
+				del_node = temp;
+				temp = temp->next;
+				delete_base_node(del_node);
+			}
+			last_node->next=nullptr;
+		}
+	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::push_front( T const& val) {
 		base_node* old_head = pre_head->next;
