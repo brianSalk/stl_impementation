@@ -599,4 +599,4 @@ namespace brian {
 		return __unique(p);
 	}
 	
-} //
+} 

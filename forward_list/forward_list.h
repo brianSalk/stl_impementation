@@ -301,7 +301,6 @@ private:
 		}
 		return count;
 	}
-	// unique
 	template <typename Pred>
 	size_t __unique(Pred const& p) {
 		size_t count = 0;
