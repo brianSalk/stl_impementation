@@ -199,22 +199,11 @@ private:
 
 	};
 	// helper methods
-	// I thought these helper functions would be a great idea
-	//+it turns out that for some reason if an exception is thrown,
-	//+then the catch block cannot properly deallocate memory that was created
-	//+within these helper functions.
-	//+even weirder, if no exeption is thrown, the destructor cleans everything
-	//+up just fine!
-	//+I will leave them here and I will leave them commented out in the code
-	//+that way if I ever figure out what is going on I can put them back.
 	derived_node* create_default_node() {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		Traits::construct(node_allocator, new_node);
 		return new_node;
 	}
-	// QUESTION: is there any reason to have the other overloads like move and const& if I already have this?
-	// QUESTION: should I make a way to distinguish between allocate throwing and
-	// construct throwing??
 	template <typename ...Args>
 	derived_node* create_node(Args && ...args) {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
