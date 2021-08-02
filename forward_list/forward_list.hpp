@@ -719,6 +719,12 @@ namespace brian {
 	void forward_list<T,Allocator>::sort() {
 		__sort([](T const& a, T const& b){return a < b; });
 	}
+	template <typename T, typename Allocator>
+	template <typename Cmp>
+	requires std::predicate<Cmp,T,T>
+	void forward_list<T,Allocator>::sort(Cmp cmp) {
+		__sort(cmp);
+	}
 
 
 } 
