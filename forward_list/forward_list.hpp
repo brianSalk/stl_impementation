@@ -716,12 +716,9 @@ namespace brian {
 				cmp);
 	}
 	template <typename T, typename Allocator>
-	template <typename Cmp>
-	requires std::predicate(Cmp, T, T);
-	void sort() {
-		base_node* tail	= new base_node();
-		base_node* new_sublist = new base_node()
-		__sort()
+	void forward_list<T,Allocator>::sort() {
+		__sort([](T const& a, T const& b){return a < b; });
 	}
+
 
 } 

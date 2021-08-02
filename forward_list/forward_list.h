@@ -111,7 +111,7 @@ public:
 	size_type unique(Pred p);
 	void sort();
 	template <typename Cmp>
-	requires std::predicate(Cmp,T,T);
+	requires std::predicate<Cmp,T,T>
 	void sort(Cmp comp);
 	
 	template<typename ...Args>
@@ -265,74 +265,87 @@ private:
 		this_curr->next = rest_of_this;
 		first.itr_curr->next = last.itr_curr;
 	}
-	size_t __get_length(base_node* curr) {
+	size_t __get_length() const {
 		size_t count = 0;
+		base_node* curr = pre_head->next;
 		while (curr != nullptr) {
 			curr = curr->next;
 			++count;
 		}
 		return count;
 	}
-	base_node* __split(base_node* start, size_t len) {
+	base_node* __split(base_node* start, size_t len, base_node*& next_sublist) {
 		base_node* slow = start;
 		base_node* fast = start->next;
-		size_t count = 1;
 		// find the middle node, split the list there
 		// QUESTION: why are we counting the length of the list?
-		while (count < len && (fast->next || slow->next)) {
-			if (fast->next != nullptr) {
+		// ANSWER: we want to move fast to the end of the sublist and slow to
+		// one before the middle of the sublist.
+		for (size_t i = 1;i < len && (fast->next || slow->next); ++i) {
+			if (fast->next) {
 				fast = (fast->next->next) ? fast->next->next : fast->next;
 			}
-			if (slow->next != nullptr) {
+			if (slow->next) {
 				slow = slow->next;
 			}
-			++count;
 		}
 		base_node* mid = slow->next;
+		next_sublist = fast->next;
 		slow->next = nullptr;
 		fast->next = nullptr;
 		return mid;
 	}
 	template <typename Cmp>
-	base_node* __merge_nodes(base_node* first, base_node* second,base_node*& old_tail, Cmp const& less) {
-		base_node head;
-		base_node* tail = &head;
-		while (first && second) {
-			if (less(static_cast<derived_node*>(first)->val,static_cast<derived_node*>(second)->val)) {
-				tail->next = first;
-				first = first->next;
-			} else {
-				tail->next = second;
-				second = second->next;
-			}
-			tail = tail->next;
-		}
-		tail = (first) ? first : second;
-		while (tail->next != nullptr) { tail = tail->next; }
-		old_tail->next = head.next;
-		old_tail = tail;
-	}
-	base_node* __sort(base_node* tail, base_node* next_sublist) {
-		if (!pre_head->next || ! pre_head->next->next) {
-			return pre_head->next;
-		}
-		size_t len = __get_length();
-		base_node* start = pre_head->next;
+	base_node* __merge_nodes(base_node* list1, base_node* list2,base_node*& tail, Cmp const& less) {
 		base_node dummy_head;
-		for (size_t i{1}; i < len; i*=2) {
-			tail = &dummy_head;
+		base_node* new_tail = &dummy_head;
+		while (list1 && list2) {
+			if (less(static_cast<derived_node*>(list1)->val,static_cast<derived_node*>(list2)->val)) {
+				new_tail->next = list1;
+				list1 = list1->next;
+				new_tail = new_tail->next;
+			} else {
+				new_tail->next = list2;
+				list2 = list2->next;
+				new_tail = new_tail->next;
+			}
+		}
+		if (list1) {
+			new_tail->next = list1;
+		} else {
+			new_tail->next = list2;
+		}
+		while (new_tail->next) {
+			new_tail = new_tail->next;
+		}
+		tail->next = dummy_head.next;
+		tail = new_tail;
+
+		return dummy_head.next;
+	}
+	template <typename Cmp>
+	void __sort(Cmp const& cmp) {
+		// if length < 2, don't do anything.
+		base_node* tail;
+		base_node* next_sublist;
+		if (pre_head->next == nullptr || pre_head->next->next == nullptr) {
+			return;
+		}
+		size_t n = __get_length();
+		base_node* start = pre_head->next;
+		for (size_t size{1}; size < n; size*=2) {
+			tail = pre_head;
 			while (start) {
-				if (!start->next) {
+				if (start->next == nullptr) {
 					tail->next = start;
 					break;
 				}
-				base_node* mid = __split(start, i);
-				__merge_nodes(start,mid);
+				base_node* mid = __split(start, size, next_sublist);
+				__merge_nodes(start,mid, tail, cmp);
 				start = next_sublist;
 			}
-			start = dummy_head.next;
+			start = pre_head->next;
 		}
-		return dummy_head.next;
 	}
 	// FIX ME:
 	// make sure that this algo is still exception safe even if pred throws.
