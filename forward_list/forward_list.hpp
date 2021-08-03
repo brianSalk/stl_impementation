@@ -9,6 +9,7 @@
 #include <iterator>
 #include <memory>
 #include <utility>
+#include <limits>
 namespace brian {
 	// constructors
 	template<typename T, typename Allocator>
@@ -644,6 +645,12 @@ namespace brian {
 	template <typename T, typename Allocator>
 	T const& forward_list<T, Allocator>::front() const {
 		return static_cast<derived_node*>(pre_head->next)->val;
+	}
+	template <typename T, typename Allocator>
+	size_t forward_list<T,Allocator>::max_size() const noexcept {
+		// I think the standard says the answer to this is implementation defined.
+		// but this should work...
+		return std::allocator_traits<NodeAlloc_t>::max_size(node_allocator);
 	}
 	// algorithms
 	// this algorithm provides a basic exception guarentee, meaning that
