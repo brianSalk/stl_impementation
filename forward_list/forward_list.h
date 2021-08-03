@@ -454,10 +454,20 @@ private:
 		}
 		if (!curr->next) {
 			// add new_size - count elements
-			while (count < new_size) {
-				curr->next = create_node(args...);
-				curr = curr->next;
-				++count;
+			try {
+				while (count < new_size) {
+					curr->next = create_node(args...);
+					curr = curr->next;
+					++count;
+				}
+			}
+			catch (...) {
+				// if resize fails,
+				// the new node was never created or was destroyed
+				// within create_node.
+				// just point curr->next at nullptr
+				// to provide a basic exception safety;
+				curr->next = nullptr;
 			}
 		} else {
 			// remove all nodes after curr
