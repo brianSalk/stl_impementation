@@ -576,6 +576,14 @@ namespace brian {
 		return iterator(last.itr_curr);
 	}
 	template <typename T, typename Allocator>
+	void forward_list<T, Allocator>::resize(size_type new_size) {
+		__resize(new_size);
+	}
+	template <typename T, typename Allocator>
+	void forward_list<T, Allocator>::resize(size_type new_size, T const& val) {
+		__resize(new_size, val);
+	}
+	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::~forward_list() {
 		clear();
 		delete pre_head;

@@ -443,6 +443,35 @@ private:
 		rhs.before_begin().itr_curr->next = nullptr;
 		return *this;
 	}
+	template <typename ...Args>
+	void __resize(size_t new_size, Args  const&...args) {
+		size_t count = 0;
+		// keep moving curr along until count > new_size or curr->next == nullptr
+		base_node* curr = pre_head;
+		while (count < new_size && curr->next) {
+			curr = curr->next;
+			++count;
+		}
+		if (!curr->next) {
+			// add new_size - count elements
+			while (count < new_size) {
+				curr->next = create_node(args...);
+				curr = curr->next;
+				++count;
+			}
+		} else {
+			// remove all nodes after curr
+			base_node* del_node = curr->next;
+			base_node* last = curr;
+			base_node* temp;
+			while (del_node) {
+				temp = del_node;
+				del_node = del_node->next;
+				delete_base_node(temp);
+			}
+			curr->next = nullptr;
+		}
+	}
 	// default comparison operators
 	
 
