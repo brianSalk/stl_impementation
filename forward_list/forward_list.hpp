@@ -233,11 +233,16 @@ namespace brian {
 			// now we loop through other and move each element to this
 			base_node* other_curr = other.begin().itr_curr;
 			base_node* this_curr = this->before_begin().itr_curr;
+			try {
 			while (other_curr != nullptr) {
 				derived_node* new_node = create_node(std::move(static_cast<derived_node*>(other_curr)->val));
 				this_curr->next = static_cast<base_node*>(new_node);
 				this_curr = this_curr->next;
 				other_curr = other_curr->next;
+			}
+			} catch (...) {
+				this_curr->next = nullptr;
+				throw;
 			}
 			other.pre_head->next = nullptr;
 			return *this;
