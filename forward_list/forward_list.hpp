@@ -118,10 +118,10 @@ namespace brian {
 	}
 	// move constructor
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) {
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : forward_list() {
 		value_allocator = std::move(other.value_allocator);
-		pre_head = other.pre_head;
-		other.pre_head = nullptr;
+		pre_head->next = other.pre_head->next;
+		other.pre_head->next = nullptr;
 	}
 	// move constructor allocator extended
 	// the else condition is probably wrong and needs to be tested
@@ -591,7 +591,7 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {
-		if (pre_head == nullptr) return;
+		if (pre_head == nullptr) {std::cout << "FIX_ME\n";return;}
 		derived_node* curr = static_cast<derived_node*>(pre_head->next);
 		derived_node* temp  = curr;
 		try {
