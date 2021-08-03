@@ -192,10 +192,15 @@ namespace brian {
 		}
 		// if other is longer than this, we need to allocate more space to add the extra nodes to this
 		else if (this_curr == nullptr && other_curr != nullptr) {
+			try {
 			while (other_curr != nullptr) {
 				this_temp->next = static_cast<base_node*>(create_node(static_cast<derived_node*>(other_curr)->val));
 				this_temp = this_temp->next;
 				other_curr = other_curr->next;
+			}
+			} catch (...) {
+				this_temp->next = nullptr;
+				throw;
 			}
 			this_temp->next = nullptr;
 		}
