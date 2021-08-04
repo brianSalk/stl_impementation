@@ -594,7 +594,9 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {
-		if (pre_head == nullptr) {std::cout << "FIX_ME\n";return;}
+		// there should never be a situation where a list has a null pre_head
+		// uncomment line below if you think t
+		//if (pre_head == nullptr) {std::cout << "FIX ME, pre_head is null\n";return;}
 		derived_node* curr = static_cast<derived_node*>(pre_head->next);
 		derived_node* temp  = curr;
 		try {
