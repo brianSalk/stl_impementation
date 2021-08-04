@@ -118,31 +118,34 @@ namespace brian {
 	}
 	// move constructor
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) {
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : forward_list() {
 		value_allocator = std::move(other.value_allocator);
-		pre_head = other.pre_head;
-		other.pre_head = nullptr;
+		pre_head->next = other.pre_head->next;
+		other.pre_head->next = nullptr;
 	}
 	// move constructor allocator extended
 	// the else condition is probably wrong and needs to be tested
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other, Allocator const& alloc) {
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other, Allocator const& alloc) : forward_list() {
 		if (alloc == other.get_allocator()) {
+			std::cout << "not in else\n";
 			value_allocator = std::move(other.value_allocator);
-			pre_head = other.pre_head;
+			this->pre_head->next = other.pre_head->next;
 		} else {
+			std::cout << "in else\n";
 			value_allocator = std::move(other.value_allocator);
-			base_node* other_curr = other.pre_head;
+			base_node* other_curr = other.pre_head->next;
 			base_node* this_curr = this->pre_head;
 			base_node* other_temp;
 			// point this_curr to other_curr then point other curr off
 			while (other_curr != nullptr) {
 				other_temp = other_curr;
 				other_curr = other_curr->next;
-				this_curr = std::move(other_temp);
+				this_curr->next = std::move(other_temp);
+				this_curr = this_curr->next;
 			}
 		}
-		other.pre_head = nullptr;
+		other.pre_head->next = nullptr;
 	}
 	// operators
 	// copy assignment
@@ -601,7 +604,9 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {
-		if (pre_head == nullptr) return;
+		// there should never be a situation where a list has a null pre_head
+		// uncomment line below if you think t
+		//if (pre_head == nullptr) {std::cout << "FIX ME, pre_head is null\n";return;}
 		derived_node* curr = static_cast<derived_node*>(pre_head->next);
 		derived_node* temp  = curr;
 		try {
