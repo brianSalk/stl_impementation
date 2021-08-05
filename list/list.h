@@ -1,5 +1,7 @@
 #pragma once
 #include <cstddef>
+#include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <utility>
 
@@ -49,8 +51,25 @@ class list {
 	using node_allocator_t = typename std::allocator_traits<allocator_type>
 		::template rebind_alloc<node>;
 	using Traits = std::allocator_traits<node_allocator_t>;
-	node* head;	
-	node* tail;
+	base_node* pre_head;	
+	base_node* aft_tail;
 	public:
+	// constructors
+	list();
+	explicit list(allocator_type const& alloc);
+	// modifiers
+	list(size_type count, value_type const& val, allocator_type const& alloc = allocator_type());
+	explicit list(size_type count, allocator_type const& alloc = allocator_type());
+	template <typename It, typename std::iterator_traits<It>::pointer>
+	list(list const& other);
+	list(list const& other, allocator_type const& alloc);
+	list(list && other);
+	list(list && other, allocator_type const& alloc);
+	list(std::initializer_list<T> il, allocator_type const& alloc = allocator_type());
+	// modifiers
+	void clear() noexcept;	
+	iterator insert(const_iterator pos, T const& val); 
+
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
+#include "list.hpp"
