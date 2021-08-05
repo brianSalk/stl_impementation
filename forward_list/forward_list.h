@@ -303,6 +303,7 @@ private:
 	}
 	template <typename Cmp>
 	base_node* __merge_nodes(base_node* list1, base_node* list2,base_node*& tail, Cmp const& less) {
+		base_node* l1 = list1, *l2 = list2;
 		base_node dummy_head;
 		base_node* new_tail = &dummy_head;
 		while (list1 && list2) {
@@ -318,10 +319,24 @@ private:
 				}
 			}
 			catch (...) {
-				std::cout << "EX\n";
-				this->dump();
-
-			}
+				// find end of list1
+				// connect end of list1 to list2
+				base_node* end_of_list1 = l1;
+				while (end_of_list1->next != nullptr) {
+					end_of_list1 = end_of_list1->next;
+				}
+				// find end of list2
+				// connect end of list2 to next list
+				base_node* end_of_list2 = l2;
+				while (end_of_list2) {
+					end_of_list2 = end_of_list2->next;
+				}
+				end_of_list1->next = l2;
+				end_of_list2 = tail; 
+				// now we have the ends
+				clear();
+				throw;
+			} // END CATCH
 		}
 		if (list1) {
 			new_tail->next = list1;
@@ -333,7 +348,6 @@ private:
 		}
 		tail->next = dummy_head.next;
 		tail = new_tail;
-
 		return dummy_head.next;
 	}
 	template <typename Cmp>
@@ -354,7 +368,12 @@ private:
 					break;
 				}
 				base_node* mid = __split(start, size, next_sublist);
-				__merge_nodes(start,mid, tail, cmp);
+				try { 
+					__merge_nodes(start,mid, tail, cmp);
+				}
+				catch (...) {
+					start = pre_head->next;
+				}
 				start = next_sublist;
 			}
 			start = pre_head->next;
