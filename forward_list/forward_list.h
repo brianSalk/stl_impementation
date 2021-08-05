@@ -355,22 +355,24 @@ private:
 		derived_node* temp = static_cast<derived_node*>(pre_head);
 		derived_node* del_node;
 		size_t count = 0;
+		base_node del_list_pre_head;
+		base_node* del_list_curr = del_list_pre_head;
 		while (curr != nullptr) {
 			try {
 				while (curr != nullptr && p(curr->val)) {
 					count++;
 					del_node = curr;
 					curr = static_cast<derived_node*>(curr->next);
-					delete_node(del_node);
+					del_list_curr->next = del_node;
+					del_list_curr = del_list_curr->next;
 				}
 			}
 			// g++ and clang both leave the container in the
 			// same state as it was before the method call if an exception
 			// is thrown, although only a basic exception guarentee
 			// is required by the standard.
-			// I am chosing to make my implementation more efficient
-			// but less predictable for the user if an exception is thrown
-			// while still meeting the basic exception guarentee
+			// here I am doing the same, 
+			// even though it is not a strict requirement
 			catch (...) {
 				// if p throws, then make sure there are no leaks and
 				std::cerr << "predicate threw exception in remove_if\n";
@@ -390,18 +392,26 @@ private:
 		derived_node* temp = static_cast<derived_node*>(pre_head->next);
 		derived_node* del_node;
 		while (curr != nullptr) {
+			// much like with remove_if, if pred throws,
+			// there is a basic excpetion guarentee
+			// except it looks like g++ and clang
+			// do not preserve the excact state of the
+			// container if pred throws at any time
+			try {
 			while(curr && p(temp->val,curr->val)) {
 				count++;
 				del_node = curr;
 				curr = static_cast<derived_node*>(curr->next);
-				try {
-					delete_node(del_node);
-				} catch (...) {
-					temp->next = del_node;
-					return count;
-				}
+				temp->next = del_node;
+				delete_node(del_node);
 			}
-			temp->next = static_cast<base_node*>(curr);
+			}
+			catch (...) {
+				temp->next = curr;
+				temp = curr;
+				throw;
+			}
+			temp->next = curr;
 			temp = curr;
 			if (curr != nullptr)
 				curr = static_cast<derived_node*>(curr->next);
