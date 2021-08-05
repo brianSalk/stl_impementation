@@ -356,17 +356,24 @@ private:
 		derived_node* del_node;
 		size_t count = 0;
 		while (curr != nullptr) {
-			while (curr != nullptr && p(curr->val)) {
-				count++;
-				del_node = curr;
-				curr = static_cast<derived_node*>(curr->next);
-				try {
+			try {
+				while (curr != nullptr && p(curr->val)) {
+					count++;
+					del_node = curr;
+					curr = static_cast<derived_node*>(curr->next);
 					delete_node(del_node);
-				} catch (...) {
-					curr = del_node;
-					temp->next = curr;
-					return count;
 				}
+			}
+			// g++ and clang both leave the container in the
+			// same state as it was before the method call if an exception
+			// is thrown, although only a basic exception guarentee
+			// is required by the standard.
+			// I am chosing to make my implementation more efficient
+			// but less predictable for the user if an exception is thrown
+			// while still meeting the basic exception guarentee
+			catch (...) {
+				// if p throws, then make sure there are no leaks and
+				std::cerr << "predicate threw exception in remove_if\n";
 			}
 			temp->next = curr;
 			temp = curr;

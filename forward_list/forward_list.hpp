@@ -581,7 +581,7 @@ namespace brian {
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {
 		// there should never be a situation where a list has a null pre_head
-		// uncomment line below if you think t
+		// uncomment line below to debug for null pre_head
 		//if (pre_head == nullptr) {std::cout << "FIX ME, pre_head is null\n";return;}
 		derived_node* curr = static_cast<derived_node*>(pre_head->next);
 		derived_node* temp  = curr;
@@ -644,13 +644,13 @@ namespace brian {
 		return std::allocator_traits<NodeAlloc_t>::max_size(node_allocator);
 	}
 	// algorithms
-	// this algorithm provides a basic exception guarentee, meaning that
-	// if an element throws upon deletion, the forward list will be left in a 
-	// valid state and no memory is leaked
+	// remove is no-throw
 	template <typename T, typename Allocator>
 	std::size_t	forward_list<T,Allocator>::remove(T const& val) {
 		return __remove([val](T const& v){return val == v;});
 	}
+	// remove_if is no-throw unless pred throws,
+	// then there is a basic guarentee
 	template <typename T, typename Allocator>
 	template<typename Pred>
 	requires std::predicate<Pred,T>
