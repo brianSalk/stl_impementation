@@ -1,16 +1,37 @@
 #pragma once
 #include <cstddef>
 #include <memory>
+#include <utility>
 
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>>
 class list {
+	//__base_iterator contains the code that is common to forward and backwards iterators
 	template <bool Is_Const>
 	class __base_iterator;
 	template <bool Is_Const>
-	class list_iterator : public __base_iterator<Is_Const>;
+	class list_iterator;
 	template <bool Is_Const>
-	class reverse_list_iterator : public __base_iterator<Is_Const>;
+	class reverse_list_iterator;
+	struct base_node {
+		base_node* next, * prev;
+		base_node() :next(nullptr), prev(nullptr) {}
+		base_node(int,base_node*n):next(n) {}
+		base_node(base_node* p) : prev(p) {}
+		base_node(base_node* p, base_node* n) :next(n),prev(p){}
+
+	};
+	struct node {
+		T val;
+		template <typename ...Args>
+		node(Args &&...args) : base_node(), val(std::forward<Args>(args)...){}
+		template <typename ...Args>
+		node(node* p, Args && ...args) : base_node(p),val(std::forward<Args>()...){}
+		template <typename ...Args>
+		node(Args && ... args, node* n) : base_node(0,n),val(std::forward<Args>(args)...){}
+		template <typename ...Args>
+		node(node* p,Args && ... args, node* n) : base_node(p,n),val(std::forward<Args>(args)...){}
+	};
 	public:
 	using value_type = T;
 	using allocator_type = Allocator;
@@ -24,8 +45,12 @@ class list {
 	using const_iterator = list_iterator<true>;
 	using reverse_iterator = reverse_list_iterator<false>;
 	using const_reverse_iterator = reverse_list_iterator<true>;
-
-
-	
+	private:
+	using node_allocator_t = typename std::allocator_traits<allocator_type>
+		::template rebind_alloc<node>;
+	using Traits = std::allocator_traits<node_allocator_t>;
+	node* head;	
+	node* tail;
+	public:
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
