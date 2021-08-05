@@ -1,3 +1,4 @@
+#pragma once
 #include "forward_list.h"
 #include <bits/c++config.h>
 #include <concepts>
@@ -402,14 +403,7 @@ namespace brian {
 	typename forward_list<T, Allocator>::iterator forward_list<T, Allocator>::insert_after(const_iterator pos,T const& val) {
 		base_node* curr = pos.itr_curr;	
 		base_node* new_node = curr->next;
-		try {
-			new_node = create_node(val);
-		}
-		catch (...) {
-			std::cerr << "element with value not inserted due to exception\n";
-			delete_node(new_node);
-			return iterator(pos.itr_curr);
-		}
+		new_node = create_node(val);
 		curr->next = static_cast<base_node*>(new_node);
 		curr->next->next = new_node;
 		return iterator(curr);
@@ -418,12 +412,11 @@ namespace brian {
 	typename forward_list<T, Allocator>::iterator forward_list<T, Allocator>::insert_after(const_iterator pos, T&& val) {
 		base_node* curr = pos.itr_curr;
 		base_node* next_node = curr->next;
-		derived_node* new_node = nullptr;
+		derived_node* new_node;
 		try {
 			new_node = create_node(std::move(val));
 		} catch (...) {
-			std::cerr << "value " << val << " not inserted due to exception\n";
-			delete_node(new_node);
+			std::cerr << "insert_afger failed\n";
 			return iterator(pos.itr_curr);
 		}
 		curr->next = static_cast<base_node*>(new_node);
