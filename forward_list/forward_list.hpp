@@ -394,14 +394,7 @@ namespace brian {
 	void forward_list<T, Allocator>::emplace_front(Args && ...args) {
 		base_node* old_head = pre_head->next;
 		derived_node* new_head = nullptr;
-		try {
-			new_head = create_node(std::forward<Args>(args)...);
-		}
-		catch (...) {
-			std::cerr << "could not emplace_front\n";
-			delete_node(new_head);
-			return;
-		}
+		new_head = create_node(std::forward<Args>(args)...);
 		pre_head->next = static_cast<base_node*>(new_head);
 		pre_head->next->next = old_head;
 	}
