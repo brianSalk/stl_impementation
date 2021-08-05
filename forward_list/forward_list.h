@@ -438,7 +438,7 @@ private:
 		while (l_curr != nullptr && r_curr != nullptr) {
 			if (less(l_curr->val,r_curr->val)) {
 				// add l_curr to list
-				temp_curr->next = static_cast<base_node*>(l_curr);
+				temp_curr->next = l_curr;
 				l_curr = static_cast<derived_node*>(l_curr->next);
 			} else {
 				temp_curr->next = static_cast<base_node*>(r_curr);
@@ -452,11 +452,11 @@ private:
 			temp_curr = static_cast<derived_node*>(temp_curr->next);
 		}
 		while (r_curr != nullptr) {
-			temp_curr->next = static_cast<base_node*>(r_curr);
+			temp_curr->next = r_curr;
 			r_curr = static_cast<derived_node*>(r_curr->next);
 			temp_curr = static_cast<derived_node*>(temp_curr->next);
 		}
-		lhs.before_begin().itr_curr->next = static_cast<base_node*>(temp_head);
+		lhs.before_begin().itr_curr->next = temp_head;
 		rhs.before_begin().itr_curr->next = nullptr;
 		return *this;
 	}
