@@ -722,8 +722,10 @@ namespace brian {
 				cmp);
 	}
 	template <typename T, typename Allocator>
+	template <typename U>
+	requires __less_than_comparable<U>
 	void forward_list<T,Allocator>::sort() {
-		__sort([](T const& a, T const& b){return a < b; });
+		__sort([](U const& a, U const& b){return a < b; });
 	}
 	template <typename T, typename Allocator>
 	template <typename Cmp>

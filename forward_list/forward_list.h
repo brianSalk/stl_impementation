@@ -11,6 +11,10 @@
 #include <compare>
 #include <algorithm>
 namespace brian {
+	template <typename U>
+	concept __less_than_comparable = requires(U a, U b) {
+		{ a < b } -> std::convertible_to<bool>;
+	};
 template <typename T, typename Allocator = std::allocator<T>>
 class forward_list {
 	// forward declaration of list_iterator class template
@@ -109,6 +113,8 @@ public:
 	template<typename Pred>
 	requires std::predicate<Pred,T,T>
 	size_type unique(Pred p);
+	template <typename U=T>
+	requires __less_than_comparable<U>
 	void sort();
 	template <typename Cmp>
 	requires std::predicate<Cmp,T,T>
@@ -300,14 +306,21 @@ private:
 		base_node dummy_head;
 		base_node* new_tail = &dummy_head;
 		while (list1 && list2) {
-			if (less(static_cast<derived_node*>(list1)->val,static_cast<derived_node*>(list2)->val)) {
-				new_tail->next = list1;
-				list1 = list1->next;
-				new_tail = new_tail->next;
-			} else {
-				new_tail->next = list2;
-				list2 = list2->next;
-				new_tail = new_tail->next;
+			try {
+				if (less(static_cast<derived_node*>(list1)->val,static_cast<derived_node*>(list2)->val)) {
+					new_tail->next = list1;
+					list1 = list1->next;
+					new_tail = new_tail->next;
+				} else {
+					new_tail->next = list2;
+					list2 = list2->next;
+					new_tail = new_tail->next;
+				}
+			}
+			catch (...) {
+				std::cout << "EX\n";
+				this->dump();
+
 			}
 		}
 		if (list1) {
