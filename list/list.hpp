@@ -29,13 +29,13 @@ list<T,Allocator>::insert(const_iterator pos, T && val) {
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator
 list<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
-	base_node* temp_head;
+	base_node* temp_head = nullptr;
 	base_node* curr;
 	try {
 		temp_head = create_node(val);
 		curr = temp_head;	
 		base_node* temp;	
-		for (size_t i = 0; i < count; ++i) {
+		for (size_t i = 1; i < count; ++i) {
 			base_node* new_node = create_node(curr,val);
 			curr->next = new_node;
 			curr = curr->next;

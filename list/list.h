@@ -86,6 +86,7 @@ private:
 		using difference_type = std::ptrdiff_t;
 		using pointer = typename std::conditional<Is_Const, T const*, T*>::type;
 		using reference = typename std::conditional<Is_Const, T const&, T&>::type;
+		list_iterator() = default;
 		list_iterator(base_node* c) : itr_curr(c) {}
 		list_iterator(list_iterator<Is_Const> const&) = default;
 		// converts iterator to const_iterator 
