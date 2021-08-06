@@ -68,6 +68,8 @@ class list {
 	// modifiers
 	void clear() noexcept;	
 	iterator insert(const_iterator pos, T const& val); 
+	iterator insert(const_iterator pos, T && val);
+	iterator insert(const_iterator pos, size_t, T const& val);
 	// iterator_methods
 	iterator begin() { return iterator(pre_head->next); }
 	iterator end() { return iterator(aft_tail); }
@@ -142,6 +144,10 @@ private:
 	void delete_node(base_node* del_node) {
 		Traits::destroy(node_allocator, static_cast<node*>(del_node));
 		Traits::deallocate(node_allocator, static_cast<node*>(del_node),1);
+	}
+	void connect_nodes(base_node* first, base_node* second) {
+		first->next = second;
+		second->prev = first;
 	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN

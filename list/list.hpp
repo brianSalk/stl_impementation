@@ -12,13 +12,18 @@ list<T,Allocator>::list() : pre_head(new base_node()),aft_tail(new base_node()) 
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator list<T,Allocator>::insert(const_iterator pos, T const&val) {
 	base_node* before_node = pos.itr_curr->prev;
-	base_node* new_node;
-	// QUESTION: do I need to wrap this in a try block for exception safety?
-	new_node = create_node(val);
-	before_node->next = new_node;
-	new_node->prev = before_node;
-	new_node->next = pos.itr_curr;
-	pos.itr_curr->prev = new_node;
+	node* new_node = create_node(val);
+	connect_nodes(before_node,new_node);
+	connect_nodes(new_node,pos.itr_curr);
+	return iterator(new_node);
+}
+template <typename T, typename Allocator>
+typename list<T,Allocator>::iterator
+list<T,Allocator>::insert(const_iterator pos, T && val) {
+	node* new_node = create_node(std::move(val));
+	base_node* before_pos = pos.itr_curr->prev;
+	connect_nodes(before_pos,new_node);
+	connect_nodes(new_node, pos.itr_curr);
 	return iterator(new_node);
 }
 template <typename T, typename Allocator>
