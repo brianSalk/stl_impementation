@@ -3,6 +3,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 namespace brian {
@@ -70,6 +71,18 @@ class list {
 	void clear() noexcept;	
 	iterator insert(const_iterator pos, T const& val); 
 
+private:
+	template <bool Is_Const>
+	class base_iterator {
+	public:
+		using value_type = T;
+		using iterator_category = std::bidirectional_iterator_tag;
+		using difference_type = std::ptrdiff_t;
+		using pointer = typename std::conditional<Is_Const, T const*, T*>::type;
+		using reference = typename std::conditional<Is_Const, T const&, T&>;
+
+	private:
+	}	
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
 #include "list.hpp"
