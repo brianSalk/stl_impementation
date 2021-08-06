@@ -449,7 +449,7 @@ namespace brian {
 				curr = static_cast<derived_node*>(curr->next);
 				delete_node(temp);
 			}
-			return iterator(pos.itr_curr);
+			throw;
 		}
 		curr->next = pos.itr_curr->next;
 		pos.itr_curr->next = sublist_head;
