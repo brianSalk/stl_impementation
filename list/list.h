@@ -23,14 +23,13 @@ class list {
 	};
 	struct node :public base_node{
 		T val;
+		// constructor overload used when no node is passed
+		template <typename U,typename ...Args, typename = 
+			std::enable_if_t<!std::is_same<U,base_node*>::value && !std::is_same<U,node*>::value>>
+		node(U && u,Args &&...args) : base_node(), val(std::forward<U>(u),std::forward<Args>(args)...){}
+		// constructor overload used when node is passed
 		template <typename ...Args>
-		node(Args &&...args) : base_node(), val(std::forward<Args>(args)...){}
-		template <typename ...Args>
-		node(node* p, Args && ...args) : base_node(p),val(std::forward<Args>()...){}
-		template <typename ...Args>
-		node(Args && ... args, node* n) : base_node(0,n),val(std::forward<Args>(args)...){}
-		template <typename ...Args>
-		node(node* p,Args && ... args, node* n) : base_node(p,n),val(std::forward<Args>(args)...){}
+		node(base_node* p, Args && ...args) : base_node(p),val(std::forward<Args>(args)...){}
 	};
 	public:
 	using value_type = T;

@@ -27,6 +27,36 @@ list<T,Allocator>::insert(const_iterator pos, T && val) {
 	return iterator(new_node);
 }
 template <typename T, typename Allocator>
+typename list<T,Allocator>::iterator
+list<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
+	base_node* temp_head;
+	base_node* curr;
+	try {
+		temp_head = create_node(val);
+		curr = temp_head;	
+		base_node* temp;	
+		for (size_t i = 0; i < count; ++i) {
+			base_node* new_node = create_node(curr,val);
+			curr->next = new_node;
+			curr = curr->next;
+		}
+	} catch (...) {
+		// clean up memory here
+		curr = temp_head;
+		base_node* del_node;
+		while (curr) {
+			del_node = curr;
+			curr = curr->next;
+			delete_node(del_node);
+		}
+		// propogate exception to user
+		throw;
+	}
+	connect_nodes(pos.itr_curr->prev, temp_head);
+	connect_nodes(curr,pos.itr_curr);
+	return iterator(temp_head);
+}
+template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
 	base_node* curr = pre_head;
 	base_node* del_node;
