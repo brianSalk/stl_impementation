@@ -21,4 +21,14 @@ typename list<T,Allocator>::iterator list<T,Allocator>::insert(const_iterator po
 	pos.itr_curr->prev = new_node;
 	return iterator(new_node);
 }
+template <typename T, typename Allocator>
+list<T,Allocator>::~list() {
+	base_node* curr = pre_head;
+	base_node* del_node;
+	while (curr) {
+		del_node = curr;
+		curr = curr->next;
+		delete_node(del_node);
+	}
+}
 }// END OF NAMESPACE BRIAN

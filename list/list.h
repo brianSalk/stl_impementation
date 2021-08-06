@@ -73,6 +73,7 @@ class list {
 	iterator end() { return iterator(aft_tail); }
 	
 // TO DO: see if there is a nice way to refactor this code so I can have a base_iterator
+	~list();
 // that contains the code that is common to both forward and reverse iterator classes
 private:
 	template <bool Is_Const>
@@ -127,7 +128,7 @@ private:
 	};	
 	// helper methods
 	template <typename ...Args>
-	base_node* create_node(Args &&...args) {
+	node* create_node(Args &&...args) {
 		node* new_node = Traits::allocate(node_allocator,1);
 		try {
 			Traits::construct(node_allocator,new_node,std::forward<Args>(args)...);
@@ -137,6 +138,10 @@ private:
 			throw;
 		}
 		return new_node;
+	}
+	void delete_node(base_node* del_node) {
+		Traits::destroy(node_allocator, static_cast<node*>(del_node));
+		Traits::deallocate(node_allocator, static_cast<node*>(del_node),1);
 	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
