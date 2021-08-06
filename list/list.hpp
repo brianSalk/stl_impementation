@@ -4,7 +4,10 @@ namespace brian {
 // constuctors
 // default constructor
 template <typename T, typename Allocator>
-list<T,Allocator>::list() : pre_head(new base_node()),aft_tail(new base_node()) {}
+list<T,Allocator>::list() : pre_head(new base_node()),aft_tail(new base_node()) {
+	pre_head->next = aft_tail;
+	aft_tail->prev = pre_head;
+}
 // modifiers
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator list<T,Allocator>::insert(const_iterator pos, T const&val) {
@@ -15,6 +18,7 @@ typename list<T,Allocator>::iterator list<T,Allocator>::insert(const_iterator po
 	before_node->next = new_node;
 	new_node->prev = before_node;
 	new_node->next = pos.itr_curr;
-	return iterator();
+	pos.itr_curr->prev = new_node;
+	return iterator(new_node);
 }
 }// END OF NAMESPACE BRIAN

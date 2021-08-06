@@ -9,9 +9,6 @@
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>>
 class list {
-	//__base_iterator contains the code that is common to forward and backwards iterators
-	template <bool Is_Const>
-	class __base_iterator;
 	template <bool Is_Const>
 	class list_iterator;
 	template <bool Is_Const>
@@ -24,7 +21,7 @@ class list {
 		base_node(base_node* p, base_node* n) :next(n),prev(p){}
 
 	};
-	struct node {
+	struct node :public base_node{
 		T val;
 		template <typename ...Args>
 		node(Args &&...args) : base_node(), val(std::forward<Args>(args)...){}
@@ -51,6 +48,7 @@ class list {
 	private:
 	using node_allocator_t = typename std::allocator_traits<allocator_type>
 		::template rebind_alloc<node>;
+	node_allocator_t node_allocator;
 	using Traits = std::allocator_traits<node_allocator_t>;
 	base_node* pre_head;	
 	base_node* aft_tail;
@@ -70,19 +68,76 @@ class list {
 	// modifiers
 	void clear() noexcept;	
 	iterator insert(const_iterator pos, T const& val); 
-
+	// iterator_methods
+	iterator begin() { return iterator(pre_head->next); }
+	iterator end() { return iterator(aft_tail); }
+	
+// TO DO: see if there is a nice way to refactor this code so I can have a base_iterator
+// that contains the code that is common to both forward and reverse iterator classes
 private:
 	template <bool Is_Const>
-	class base_iterator {
+	class list_iterator {
+		friend list<T,Allocator>;
 	public:
 		using value_type = T;
 		using iterator_category = std::bidirectional_iterator_tag;
 		using difference_type = std::ptrdiff_t;
 		using pointer = typename std::conditional<Is_Const, T const*, T*>::type;
-		using reference = typename std::conditional<Is_Const, T const&, T&>;
+		using reference = typename std::conditional<Is_Const, T const&, T&>::type;
+		list_iterator(base_node* c) : itr_curr(c) {}
+		list_iterator(list_iterator<Is_Const> const&) = default;
+		// converts iterator to const_iterator 
+		template <bool Was_Const, typename = std::enable_if_t<Is_Const || !Was_Const>>
+			list_iterator(list_iterator<Was_Const> const& i) : itr_curr(i.itr_curr) {}
 
+		friend bool operator==(list_iterator const& lhs, list_iterator const& rhs)	{
+			return lhs.itr_curr == rhs.itr_curr;
+		}
+		friend bool operator!=(list_iterator const& lhs, list_iterator const& rhs) {
+			return lhs.itr_curr != rhs.itr_curr;
+		}
+		reference operator*() {
+				return static_cast<node*>(itr_curr)->val;
+		}
+		// stuff unique to forward_iterator
+		// prefix incrament
+		list_iterator& operator++() {
+			itr_curr = itr_curr->next;
+			return *this;
+		}
+		// suffix incrament
+		list_iterator operator++(int) {
+			auto tmp = itr_curr;
+			itr_curr = itr_curr->next;
+			return list_iterator(itr_curr);
+		}
+		// prefix decrament
+		list_iterator& operator--() {
+			itr_curr = itr_curr->prev;
+			return *this;
+		}
+		// suffix decrament
+		list_iterator operator--(int) {
+			auto tmp = itr_curr;
+			itr_curr = itr_curr->prev;
+			return list_iterator(itr_curr);
+		}
 	private:
-	}	
+		base_node* itr_curr;
+	};	
+	// helper methods
+	template <typename ...Args>
+	base_node* create_node(Args &&...args) {
+		node* new_node = Traits::allocate(node_allocator,1);
+		try {
+			Traits::construct(node_allocator,new_node,std::forward<Args>(args)...);
+		}
+		catch (...) {
+			Traits::deallocate(node_allocator,new_node,1);
+			throw;
+		}
+		return new_node;
+	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
 #include "list.hpp"
