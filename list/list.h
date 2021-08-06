@@ -16,8 +16,8 @@ class list {
 	struct base_node {
 		base_node* next, * prev;
 		base_node() :next(nullptr), prev(nullptr) {}
-		base_node(int,base_node*n):next(n) {}
-		base_node(base_node* p) : prev(p) {}
+		base_node(int,base_node*n):prev(nullptr),next(n) {}
+		base_node(base_node* p) : prev(p), next(nullptr) {}
 		base_node(base_node* p, base_node* n) :next(n),prev(p){}
 
 	};

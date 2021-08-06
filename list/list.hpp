@@ -44,7 +44,7 @@ list<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
 		// clean up memory here
 		curr = temp_head;
 		base_node* del_node;
-		while (curr) {
+		while (curr != nullptr) {
 			del_node = curr;
 			curr = curr->next;
 			delete_node(del_node);
