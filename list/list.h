@@ -71,6 +71,7 @@ class list {
 	iterator insert(const_iterator pos, size_t, T const& val);
 	template <typename It, typename std::iterator_traits<It>::pointer = nullptr>
 	iterator insert(const_iterator pos, It beg, It end);
+	iterator insert(const_iterator pos, std::initializer_list<T> il);
 	// iterator_methods
 	iterator begin() { return iterator(pre_head->next); }
 	iterator end() { return iterator(aft_tail); }

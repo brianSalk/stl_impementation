@@ -1,5 +1,6 @@
 #pragma once
 #include "list.h"
+#include <initializer_list>
 #include <iterator>
 namespace brian { 
 // constuctors
@@ -31,6 +32,7 @@ list<T,Allocator>::insert(const_iterator pos, T && val) {
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator
 list<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
+	if (count == 0) return pos.itr_curr;
 	base_node* temp_head = nullptr;
 	base_node* curr;
 	try {
@@ -62,6 +64,7 @@ template <typename T, typename Allcoator>
 template <typename It, typename std::iterator_traits<It>::pointer>
 typename list<T,Allcoator>::iterator
 list<T,Allcoator>::insert(const_iterator pos, It beg, It end) {
+	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
 	if (beg == end) return iterator(pos.itr_curr);
 		base_node* temp_head = create_node(*beg);
 		base_node* curr = temp_head;
@@ -86,6 +89,11 @@ list<T,Allcoator>::insert(const_iterator pos, It beg, It end) {
 	connect_nodes(pos.itr_curr->prev,temp_head);
 	connect_nodes(curr,pos.itr_curr);
 	return iterator(temp_head);
+}
+template <typename T, typename Allcoator>
+typename list<T, Allcoator>::iterator
+list<T, Allcoator>::insert(const_iterator pos, std::initializer_list<T> il) {
+	return insert(pos,il.begin(), il.end());
 }
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
