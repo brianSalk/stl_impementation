@@ -49,6 +49,7 @@ namespace brian {
 		catch (...) {
 			std::cerr << "call to constructor unsuccessful\n";
 			this->clear();
+			throw;
 		}
 	}
 	// T must be CopyInsertable
@@ -68,6 +69,7 @@ namespace brian {
 		catch (...) {
 			clear();
 			std::cerr << "constructor call unsuccessful\n";
+			throw;
 		}
 	}
 	template <typename T, typename Allocator>
@@ -85,7 +87,7 @@ namespace brian {
 		catch (...) {
 			std::cerr << "call to constructor unsuccessful\n";
 			clear();
-			delete_node(new_node);
+			throw;
 		}
 	}
 	// copy constructor
@@ -98,8 +100,6 @@ namespace brian {
 		derived_node* new_node = nullptr;
 		try {
 			while (other_curr != nullptr) {
-				// why does this not call create_node(T const& val) ?
-				// why does other->val not evaluate to type T?
 				new_node = create_node(other_curr->val);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = curr->next;
@@ -109,7 +109,7 @@ namespace brian {
 		catch(...) {
 			std::cerr << "constructor call unsuccessfull\n";
 			clear();
-			delete_node(new_node);
+			throw;
 		}
 	}
 	// allocator extended copy constructor
