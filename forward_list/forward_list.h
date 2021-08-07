@@ -172,6 +172,7 @@ private:
 			using difference_type = std::ptrdiff_t;
 			using pointer = typename std::conditional<IsConst, T const*, T*>::type;
 			using reference = typename std::conditional<IsConst, T const&, T&>::type;
+			list_iterator() : itr_curr(nullptr){} 
 			// default copy construtor 
 			list_iterator(list_iterator const&) = default;
 			// converting constructor that converts between const and non-cost iterators.

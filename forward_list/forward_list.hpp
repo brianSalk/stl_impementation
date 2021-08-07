@@ -276,7 +276,7 @@ namespace brian {
 				rm_curr = static_cast<derived_node*>(rm_curr->next);
 				delete_node(rm_temp);
 			}
-			return *this;
+			throw;
 		}
 		
 		this->clear();
@@ -356,14 +356,7 @@ namespace brian {
 	void forward_list<T, Allocator>::push_front( T const& val) {
 		base_node* old_head = pre_head->next;
 		derived_node* new_node = nullptr;
-		try {
-			new_node = create_node(val);
-		}
-		catch (...) {
-			std::cerr << "push_front unsuccessful\n";
-			delete_node(new_node);
-			return;
-		}
+		new_node = create_node(val);
 		pre_head->next = static_cast<base_node*>(new_node);
 		pre_head->next->next = old_head;
 	}
@@ -371,14 +364,7 @@ namespace brian {
 	void forward_list<T, Allocator>::push_front(T &&val) {
 		base_node* old_head = pre_head->next;
 		derived_node* new_node = nullptr; 
-		try {
-			new_node = create_node(std::move(val));
-		} 
-		catch (...) {
-			std::cerr << "push_front unsuccessful\n";
-			delete_node(new_node);
-			return;
-		}
+		new_node = create_node(std::move(val));
 		pre_head->next = static_cast<base_node*>(new_node);
 		pre_head->next->next = old_head;
 	}
@@ -413,12 +399,7 @@ namespace brian {
 		base_node* curr = pos.itr_curr;
 		base_node* next_node = curr->next;
 		derived_node* new_node;
-		try {
-			new_node = create_node(std::move(val));
-		} catch (...) {
-			std::cerr << "insert_afger failed\n";
-			return iterator(pos.itr_curr);
-		}
+		new_node = create_node(std::move(val));
 		curr->next = static_cast<base_node*>(new_node);
 		curr->next->next = next_node;
 		return iterator(curr);
@@ -440,7 +421,6 @@ namespace brian {
 				curr = static_cast<derived_node*>(curr->next);
 			}
 		} catch (...) {
-			std::cerr << "insert_after of " << count << " elements unsuccessful, your data structure has not been modified\n";
 			// now clean up memory
 			curr = sublist_head;
 			derived_node* temp = nullptr;
@@ -471,25 +451,19 @@ namespace brian {
 			temp_head = curr;
 			for (auto other_it = ++first; other_it != last; ++other_it) {
 				// allocate and construct new node
-				new_node = create_node(std::move(*other_it));
-//				new_node = Traits::allocate(node_allocator, 1);
-//				Traits::construct(node_allocator, curr, *other_it);
+				new_node = create_node(*other_it);
 				curr->next = new_node;
 				curr = static_cast<derived_node*>(curr->next);
 			}
 		} catch (...) {
-			std::cerr << "insert_after failed\n";
-		
 			derived_node* temp = temp_head;
 			derived_node* c = temp_head;
 			while(c != nullptr) {
 				temp = c;
-				std::cout << "temp->val = " << temp->val << '\n';
 				c = static_cast<derived_node*>(c->next);
 				delete_node(temp);
-				std::cout << "deleted\n";
 			}
-			return iterator(pos.itr_curr);
+			throw;
 		}
 		// if no exception was thrown, insert the new list
 		this_first.itr_curr->next = temp_head;
@@ -499,35 +473,7 @@ namespace brian {
 	template <typename T, typename Allocator>
 	typename forward_list<T,Allocator>::iterator
 	forward_list<T,Allocator>::insert_after(const_iterator pos, std::initializer_list<T> il) {
-		derived_node* temp_head;
-		derived_node* temp_curr;
-		try {
-			auto il_it = il.begin();
-			temp_head = create_node(*il_it++);
-			temp_curr = temp_head;
-			for (auto it = il_it; it != il.end(); ++it) {
-				temp_curr->next = static_cast<base_node*>(create_node(*it));
-				temp_curr = static_cast<derived_node*>(temp_curr->next);
-				std::cout << "in loop\n";
-			}
-		}
-		catch (...) {
-			std::cerr << "insert_after failed\n";
-			derived_node* rm_curr = temp_head;
-			derived_node* rm_temp;
-			while (rm_curr != nullptr) {
-				rm_temp = rm_curr;
-				rm_curr = static_cast<derived_node*>(rm_curr->next);
-				delete_node(rm_temp);
-			}
-			return iterator(pos.itr_curr);
-		}
-		std::cout << "here\n";
-		base_node* rest_of_this = pos.itr_curr->next;
-		std::cout << "here\n";
-		pos.itr_curr->next = temp_head;
-		temp_curr->next = rest_of_this;		
-		return iterator(temp_curr);
+		return insert_after(pos,il.begin(),il.end());
 	}
 	template <typename T, typename Allocator>
 	template <typename ... Args>
