@@ -478,13 +478,8 @@ namespace brian {
 	template <typename T, typename Allocator>
 	template <typename ... Args>
 	typename forward_list<T,Allocator>::iterator forward_list<T, Allocator>::emplace_after(const_iterator pos, Args && ...args) {
-		derived_node* new_node = nullptr;
-		try {
-			new_node = create_node(std::forward<Args>(args)...);
-		} catch (...) {
-			std::cerr << "emplace_after failed\n";
-			return iterator(pos.itr_curr);
-		}
+		derived_node* new_node;
+		new_node = create_node(std::forward<Args>(args)...);
 		base_node* next_node = pos.itr_curr->next;
 		pos.itr_curr->next = static_cast<base_node*>(new_node);
 		new_node->next = next_node;
@@ -538,9 +533,9 @@ namespace brian {
 				delete_node(temp);
 			}
 		}
+		// If a destructor throws (which it never should) you at least to get to clear the list
 		catch (...) {
 			std::cerr << "element threw an exception upon destruction/deallocation, you may have leaked memory\n";
-
 		}
 		pre_head->next = nullptr;
 	}
@@ -679,6 +674,4 @@ namespace brian {
 	void forward_list<T,Allocator>::sort(Cmp cmp) {
 		__sort(cmp);
 	}
-
-
 } 
