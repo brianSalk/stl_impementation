@@ -69,12 +69,13 @@ class list {
 	iterator insert(const_iterator pos, T const& val); 
 	iterator insert(const_iterator pos, T && val);
 	iterator insert(const_iterator pos, size_t, T const& val);
+	template <typename It, typename std::iterator_traits<It>::pointer = nullptr>
+	iterator insert(const_iterator pos, It beg, It end);
 	// iterator_methods
 	iterator begin() { return iterator(pre_head->next); }
 	iterator end() { return iterator(aft_tail); }
-	
-// TO DO: see if there is a nice way to refactor this code so I can have a base_iterator
 	~list();
+	// list_iterator is the base class of reverse_iterator
 // that contains the code that is common to both forward and reverse iterator classes
 private:
 	template <bool Is_Const>
@@ -88,12 +89,12 @@ private:
 		using reference = typename std::conditional<Is_Const, T const&, T&>::type;
 		list_iterator() = default;
 		list_iterator(base_node* c) : itr_curr(c) {}
+		// default copy constructor
 		list_iterator(list_iterator<Is_Const> const&) = default;
 		// converts iterator to const_iterator 
-		template <bool Was_Const, typename = std::enable_if_t<Is_Const || !Was_Const>>
-			list_iterator(list_iterator<Was_Const> const& i) : itr_curr(i.itr_curr) {}
-
-		friend bool operator==(list_iterator const& lhs, list_iterator const& rhs)	{
+		template <bool Was_Const,typename = std::enable_if_t<Is_Const || !Was_Const>>
+			list_iterator(list_iterator<Was_Const> const& i) : itr_curr(i.itr_curr){}
+		friend bool operator==(list_iterator<Is_Const> const& lhs, list_iterator<Is_Const> const& rhs) {
 			return lhs.itr_curr == rhs.itr_curr;
 		}
 		friend bool operator!=(list_iterator const& lhs, list_iterator const& rhs) {
@@ -125,6 +126,8 @@ private:
 			itr_curr = itr_curr->prev;
 			return list_iterator(itr_curr);
 		}
+		// overload the -> operator
+
 	private:
 		base_node* itr_curr;
 	};	
@@ -145,6 +148,7 @@ private:
 		Traits::destroy(node_allocator, static_cast<node*>(del_node));
 		Traits::deallocate(node_allocator, static_cast<node*>(del_node),1);
 	}
+	// used to connect 2 preexisting nodes
 	void connect_nodes(base_node* first, base_node* second) {
 		first->next = second;
 		second->prev = first;
