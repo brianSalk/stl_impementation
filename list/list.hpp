@@ -9,6 +9,15 @@ template <typename T, typename Allocator>
 list<T,Allocator>::list() : pre_head(new base_node()),aft_tail(new base_node()) {
 	pre_head->next = aft_tail;
 	aft_tail->prev = pre_head;
+	n = 0;
+}
+template <typename T, typename Allocator>
+list<T, Allocator>::list(std::initializer_list<T> il, Allocator const&) : list() {
+	// FIX_ME: this needs to be optimized, but it works for now
+	for (auto const& each : il) {
+		insert(end(),each);
+	}	
+	n = il.size();
 }
 // modifiers
 template <typename T, typename Allocator>
@@ -18,6 +27,7 @@ list<T,Allocator>::insert(const_iterator pos, T const&val) {
 	node* new_node = create_node(val);
 	connect_nodes(before_node,new_node);
 	connect_nodes(new_node,pos.itr_curr);
+	++n;
 	return iterator(new_node);
 }
 template <typename T, typename Allocator>
@@ -27,6 +37,7 @@ list<T,Allocator>::insert(const_iterator pos, T && val) {
 	base_node* before_pos = pos.itr_curr->prev;
 	connect_nodes(before_pos,new_node);
 	connect_nodes(new_node, pos.itr_curr);
+	++n;
 	return iterator(new_node);
 }
 template <typename T, typename Allocator>
@@ -58,6 +69,7 @@ list<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
 	}
 	connect_nodes(pos.itr_curr->prev, temp_head);
 	connect_nodes(curr,pos.itr_curr);
+	n+=count;
 	return iterator(temp_head);
 }
 template <typename T, typename Allcoator>

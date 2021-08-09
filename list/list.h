@@ -51,10 +51,12 @@ class list {
 	using Traits = std::allocator_traits<node_allocator_t>;
 	base_node* pre_head;	
 	base_node* aft_tail;
+	size_t n;
 	public:
 	// constructors
 	list();
 	explicit list(allocator_type const& alloc);
+	list(std::initializer_list<T> il, Allocator const& alloc = Allocator());
 	// modifiers
 	list(size_type count, value_type const& val, allocator_type const& alloc = allocator_type());
 	explicit list(size_type count, allocator_type const& alloc = allocator_type());
@@ -63,7 +65,6 @@ class list {
 	list(list const& other, allocator_type const& alloc);
 	list(list && other);
 	list(list && other, allocator_type const& alloc);
-	list(std::initializer_list<T> il, allocator_type const& alloc = allocator_type());
 	// modifiers
 	void clear() noexcept;	
 	iterator insert(const_iterator pos, T const& val); 
@@ -80,12 +81,12 @@ class list {
 	const_iterator cbegin() const { return const_iterator(pre_head->next); }
 	const_iterator cend() const { return const_iterator(aft_tail); }
 
-	reverse_iterator rbegin() { return reverse_iterator(pre_head->next); }
-	reverse_iterator rend() { return reverse_iterator(aft_tail); }
-	const_reverse_iterator rbegin() const { return const_reverse_iterator(pre_head->next); }
-	const_reverse_iterator rend() const { return const_reverse_iterator(aft_tail); }
-	const_reverse_iterator crbegin() const { return const_reverse_iterator(pre_head->next); }
-	const_reverse_iterator crend() const { return const_reverse_iterator(aft_tail); }
+	reverse_iterator rbegin() { return reverse_iterator(aft_tail); }
+	reverse_iterator rend() { return reverse_iterator(pre_head->next); }
+	const_reverse_iterator rbegin() const { return const_reverse_iterator(aft_tail); }
+	const_reverse_iterator rend() const { return const_reverse_iterator(pre_head->next); }
+	const_reverse_iterator crbegin() const { return const_reverse_iterator(aft_tail); }
+	const_reverse_iterator crend() const { return const_reverse_iterator(pre_head->next); }
 		
 	
 	~list();
