@@ -224,12 +224,8 @@ private:
 		}
 		return new_node;
 	}
-	void delete_node(derived_node* node) {
-		Traits::destroy(node_allocator, node);
-		Traits::deallocate(node_allocator, node, 1);
-	}
-	void delete_base_node(base_node* node) {
-		Traits::destroy(node_allocator, node);
+	void delete_node(base_node* node) {
+		Traits::destroy(node_allocator, static_cast<derived_node*>(node));
 		Traits::deallocate(node_allocator, static_cast<derived_node*>(node), 1);
 	}
 	template <typename U>
@@ -527,7 +523,7 @@ private:
 			while (del_node) {
 				temp = del_node;
 				del_node = del_node->next;
-				delete_base_node(temp);
+				delete_node(temp);
 			}
 			curr->next = nullptr;
 		}

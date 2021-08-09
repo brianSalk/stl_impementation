@@ -314,7 +314,7 @@ namespace brian {
 			while (temp != nullptr) {
 				del_node = temp;
 				temp = temp->next;
-				delete_base_node(del_node);
+				delete_node(del_node);
 			}
 			last_node->next=nullptr;
 		}
@@ -343,7 +343,7 @@ namespace brian {
 			while (temp != nullptr) {
 				del_node = temp;
 				temp = temp->next;
-				delete_base_node(del_node);
+				delete_node(del_node);
 			}
 			last_node->next = nullptr;
 		}
@@ -490,7 +490,7 @@ namespace brian {
 	forward_list<T,Allocator>::erase_after(const_iterator pos) {
 		base_node* del_node = pos.itr_curr->next;
 		pos.itr_curr->next = del_node->next;
-		delete_base_node(del_node);
+		delete_node(del_node);
 		return iterator(pos.itr_curr->next);
 	}
 	template <typename T, typename Allocator>
@@ -500,7 +500,7 @@ namespace brian {
 		base_node* del_temp = first.itr_curr;
 		while (del_curr != last.itr_curr) {
 			del_temp = del_curr->next;
-			delete_base_node(del_curr);
+			delete_node(del_curr);
 			del_curr = del_temp;
 		}
 		first.itr_curr->next = last.itr_curr;
