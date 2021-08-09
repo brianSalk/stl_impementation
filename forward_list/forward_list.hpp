@@ -524,12 +524,12 @@ namespace brian {
 		// there should never be a situation where a list has a null pre_head
 		// uncomment line below to debug for null pre_head
 		//if (pre_head == nullptr) {std::cout << "FIX ME, pre_head is null\n";return;}
-		derived_node* curr = static_cast<derived_node*>(pre_head->next);
-		derived_node* temp  = curr;
+		base_node* curr = pre_head->next;
+		base_node* temp  = curr;
 		try {
 			while (curr != nullptr) {
 				temp = curr;
-				curr = static_cast<derived_node*>(curr->next);
+				curr = curr->next;
 				delete_node(temp);
 			}
 		}
