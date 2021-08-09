@@ -42,8 +42,8 @@ class list {
 	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
 	using iterator = list_iterator<false>;
 	using const_iterator = list_iterator<true>;
-	using reverse_iterator = reverse_list_iterator<false>;
-	using const_reverse_iterator = reverse_list_iterator<true>;
+	using reverse_iterator = std::reverse_iterator<iterator>;
+	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	private:
 	using node_allocator_t = typename std::allocator_traits<allocator_type>
 		::template rebind_alloc<node>;
@@ -75,6 +75,19 @@ class list {
 	// iterator_methods
 	iterator begin() { return iterator(pre_head->next); }
 	iterator end() { return iterator(aft_tail); }
+	const_iterator begin() const { return const_iterator(pre_head->next); }
+	const_iterator end() const { return const_iterator(aft_tail); }
+	const_iterator cbegin() const { return const_iterator(pre_head->next); }
+	const_iterator cend() const { return const_iterator(aft_tail); }
+
+	reverse_iterator rbegin() { return reverse_iterator(pre_head->next); }
+	reverse_iterator rend() { return reverse_iterator(aft_tail); }
+	const_reverse_iterator rbegin() const { return const_reverse_iterator(pre_head->next); }
+	const_reverse_iterator rend() const { return const_reverse_iterator(aft_tail); }
+	const_reverse_iterator crbegin() const { return const_reverse_iterator(pre_head->next); }
+	const_reverse_iterator crend() const { return const_reverse_iterator(aft_tail); }
+		
+	
 	~list();
 	// list_iterator is the base class of reverse_iterator
 // that contains the code that is common to both forward and reverse iterator classes
