@@ -168,6 +168,66 @@ private:
 		first->next = second;
 		second->prev = first;
 	}
+	template <typename It, typename std::enable_if_t<std::is_same<typename std::iterator_traits<It>::iterator_category,std::random_access_iterator_tag>::value || std::is_same<typename std::iterator_traits<It>::iterator_category,std::contiguous_iterator_tag>::value,int > = 0 >
+	iterator __insert(const_iterator & pos, It & beg, It & end) {
+	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
+	if (beg == end) return iterator(pos.itr_curr);
+		base_node* temp_head = create_node(*beg);
+		base_node* curr = temp_head;
+	try {
+		auto it = ++beg;
+		for (it = beg; it != end;++it) {
+			curr->next = create_node(curr,*it);
+			curr = curr->next;
+		}
+	} catch(...) {
+		// time to clean up
+		base_node* del_node;
+		curr = temp_head;
+		while (curr) {
+			del_node = curr;
+			curr = curr->next;
+			delete_node(del_node);
+		}
+		throw;
+	}
+
+	connect_nodes(pos.itr_curr->prev,temp_head);
+	connect_nodes(curr,pos.itr_curr);
+	n += (end-beg);
+	return iterator(temp_head);
+	}
+
+	template <typename It, typename std::enable_if_t<!std::is_same<typename std::iterator_traits<It>::iterator_category,std::random_access_iterator_tag>::value && !std::is_same<typename std::iterator_traits<It>::iterator_category,std::contiguous_iterator_tag>::value,int > = 0 >
+	iterator __insert(const_iterator & pos, It & beg, It & end) {
+	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
+	if (beg == end) return iterator(pos.itr_curr);
+		base_node* temp_head = create_node(*beg);
+		base_node* curr = temp_head;
+		++n;
+	try {
+		auto it = ++beg;
+		for (it = beg; it != end;++it) {
+			curr->next = create_node(curr,*it);
+			curr = curr->next;
+			++n;
+		}
+	} catch(...) {
+		// time to clean up
+		base_node* del_node;
+		curr = temp_head;
+		while (curr) {
+			del_node = curr;
+			curr = curr->next;
+			delete_node(del_node);
+		}
+		throw;
+	}
+
+	connect_nodes(pos.itr_curr->prev,temp_head);
+	connect_nodes(curr,pos.itr_curr);
+	return iterator(temp_head);
+	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
 #include "list.hpp"

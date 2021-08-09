@@ -76,31 +76,7 @@ template <typename T, typename Allcoator>
 template <typename It, typename std::iterator_traits<It>::pointer>
 typename list<T,Allcoator>::iterator
 list<T,Allcoator>::insert(const_iterator pos, It beg, It end) {
-	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
-	if (beg == end) return iterator(pos.itr_curr);
-		base_node* temp_head = create_node(*beg);
-		base_node* curr = temp_head;
-	try {
-		auto it = ++beg;
-		for (it = beg; it != end;++it) {
-			curr->next = create_node(curr,*it);
-			curr = curr->next;
-		}
-	} catch(...) {
-		// time to clean up
-		base_node* del_node;
-		curr = temp_head;
-		while (curr) {
-			del_node = curr;
-			curr = curr->next;
-			delete_node(del_node);
-		}
-		throw;
-	}
-
-	connect_nodes(pos.itr_curr->prev,temp_head);
-	connect_nodes(curr,pos.itr_curr);
-	return iterator(temp_head);
+	return __insert(pos,beg,end);
 }
 template <typename T, typename Allcoator>
 typename list<T, Allcoator>::iterator
