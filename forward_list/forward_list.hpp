@@ -541,9 +541,7 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T,Allocator>::swap(forward_list& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value) {
-		base_node* tmp = other.pre_head;
-		other.pre_head = this->pre_head;
-		this->pre_head = tmp;
+		__swap(typename std::allocator_traits<Allocator>::propagate_on_container_swap::type(),other);
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T,Allocator>::splice_after(const_iterator pos, forward_list& other) {

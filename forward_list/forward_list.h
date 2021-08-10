@@ -528,6 +528,19 @@ private:
 			curr->next = nullptr;
 		}
 	}
+	// swap allocators
+	void __swap(std::true_type,forward_list& other) {
+		auto tmp_alloc = other.value_allocator;
+		other.value_allocator = this->value_allocator;
+		this->value_allocator = tmp_alloc;
+		__swap(std::false_type(),other);
+	}
+	// do not swap allocators
+	void __swap(std::false_type,forward_list& other) {
+		base_node* tmp = other.pre_head;
+		other.pre_head = this->pre_head;
+		this->pre_head = tmp;
+	}
 	// default comparison operators
 	
 
