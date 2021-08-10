@@ -62,13 +62,14 @@ class list {
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	list(It first, It last, Allocator const& alloc);
 	list(list const& other);
+	list(list const& other, Allocator const& alloc);
+	list(list && other);
+	list(list &&other, Allocator const& alloc);
+	list(std::initializer_list<T> il);
 	// modifiers
 	explicit list(size_type count, allocator_type const& alloc = allocator_type());
 	template <typename It, typename std::iterator_traits<It>::pointer>
 	list(list const& other);
-	list(list const& other, allocator_type const& alloc);
-	list(list && other);
-	list(list && other, allocator_type const& alloc);
 	void clear() noexcept;	
 	iterator insert(const_iterator pos, T const& val); 
 	iterator insert(const_iterator pos, T && val);
