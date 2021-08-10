@@ -28,8 +28,7 @@ list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) 
 template <typename T, typename Allocator>
 list<T, Allocator>::list(std::initializer_list<T> il, Allocator const&) : list() {
 	auto beg = il.begin();
-	auto end = il.end();
-	__insert(begin(),beg, end);
+	__insert(begin(),beg, il.end());
 }
 template <typename T, typename Allocator>
 template <typename It, typename std::iterator_traits<It>::pointer>
