@@ -2,6 +2,7 @@
 #include "list.h"
 #include <initializer_list>
 #include <iterator>
+#include <memory>
 namespace brian { 
 // constuctors
 // default constructor
@@ -32,9 +33,26 @@ list<T, Allocator>::list(std::initializer_list<T> il, Allocator const&) : list()
 }
 template <typename T, typename Allocator>
 template <typename It, typename std::iterator_traits<It>::pointer>
-list<T, Allocator>::list(It first, It last) :list() {
-	// FIX ME: this is a test, replace with real code
+list<T, Allocator>::list(It first, It last, Allocator const& alloc) :list(alloc) {
 	__insert(iterator(begin()), first, last);
+}
+template <typename T, typename Allocator>
+list<T,Allocator>::list(list const& other) :list() {
+	this->value_allocator = std::allocator_traits<Allocator>::select_on_container_copy_construction(other.get_allocator());
+	base_node* other_curr = other.pre_head->next;
+	base_node* this_curr = this->pre_head;
+	while (other_curr != other.end()) {
+		node* new_node = create_node(this_curr,static_cast<node*>(other_curr)->val);
+		this_curr->next = new_node;	
+		this_curr = new_node;
+		other_curr = other_curr->next;
+	}
+	this->n = other.n;
+}
+// observers
+template <typename T, typename Allcoator>
+size_t list<T,Allcoator>::max_size() const noexcept {
+	return Traits::max_size(node_allocator);
 }
 // modifiers
 template <typename T, typename Allocator>
@@ -99,6 +117,12 @@ template <typename T, typename Allcoator>
 typename list<T, Allcoator>::iterator
 list<T, Allcoator>::insert(const_iterator pos, std::initializer_list<T> il) {
 	return insert(pos,il.begin(), il.end());
+}
+template <typename T, typename Allocator>
+void list<T, Allocator>::pop_back() {
+	base_node* del_node = aft_tail->prev;
+	connect_nodes(aft_tail->prev->prev, aft_tail);
+	delete_node(del_node);
 }
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {

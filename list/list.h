@@ -60,7 +60,8 @@ class list {
 	list(size_t count, T const& val, allocator_type const& alloc = Allocator());
 	list(std::initializer_list<T> il, Allocator const& alloc = Allocator());
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
-	list(It first, It last);
+	list(It first, It last, Allocator const& alloc);
+	list(list const& other);
 	// modifiers
 	explicit list(size_type count, allocator_type const& alloc = allocator_type());
 	template <typename It, typename std::iterator_traits<It>::pointer>
@@ -68,7 +69,6 @@ class list {
 	list(list const& other, allocator_type const& alloc);
 	list(list && other);
 	list(list && other, allocator_type const& alloc);
-	// modifiers
 	void clear() noexcept;	
 	iterator insert(const_iterator pos, T const& val); 
 	iterator insert(const_iterator pos, T && val);
@@ -76,9 +76,12 @@ class list {
 	template <typename It, typename std::iterator_traits<It>::pointer = nullptr>
 	iterator insert(const_iterator pos, It beg, It end);
 	iterator insert(const_iterator pos, std::initializer_list<T> il);
+	void pop_back();
 	// observers
 	size_t size() const noexcept { return n; }
-	
+	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
+	size_t max_size() const noexcept;
+	Allocator get_allocator() const noexcept { return value_allocator; }
 	// iterator_methods
 	iterator begin() { return iterator(pre_head->next); }
 	iterator end() { return iterator(aft_tail); }
