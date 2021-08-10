@@ -49,6 +49,7 @@ class list {
 		::template rebind_alloc<node>;
 	node_allocator_t node_allocator;
 	using Traits = std::allocator_traits<node_allocator_t>;
+	Allocator value_allocator;
 	base_node* pre_head;	
 	base_node* aft_tail;
 	size_t n;
@@ -56,9 +57,11 @@ class list {
 	// constructors
 	list();
 	explicit list(allocator_type const& alloc);
+	list(size_t count, T const& val, allocator_type const& alloc = Allocator());
 	list(std::initializer_list<T> il, Allocator const& alloc = Allocator());
+	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
+	list(It first, It last);
 	// modifiers
-	list(size_type count, value_type const& val, allocator_type const& alloc = allocator_type());
 	explicit list(size_type count, allocator_type const& alloc = allocator_type());
 	template <typename It, typename std::iterator_traits<It>::pointer>
 	list(list const& other);
@@ -73,6 +76,9 @@ class list {
 	template <typename It, typename std::iterator_traits<It>::pointer = nullptr>
 	iterator insert(const_iterator pos, It beg, It end);
 	iterator insert(const_iterator pos, std::initializer_list<T> il);
+	// observers
+	size_t size() const noexcept { return n; }
+	
 	// iterator_methods
 	iterator begin() { return iterator(pre_head->next); }
 	iterator end() { return iterator(aft_tail); }
@@ -168,8 +174,9 @@ private:
 		first->next = second;
 		second->prev = first;
 	}
+	// FIX_ME: this can be simplified with concepts
 	template <typename It, typename std::enable_if_t<std::is_same<typename std::iterator_traits<It>::iterator_category,std::random_access_iterator_tag>::value || std::is_same<typename std::iterator_traits<It>::iterator_category,std::contiguous_iterator_tag>::value,int > = 0 >
-	iterator __insert(const_iterator & pos, It & beg, It & end) {
+	iterator __insert(const_iterator const& pos, It& beg, It const& end) {
 	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
 	if (beg == end) return iterator(pos.itr_curr);
 		base_node* temp_head = create_node(*beg);
@@ -197,9 +204,9 @@ private:
 	n += (end-beg);
 	return iterator(temp_head);
 	}
-
+// this is the overload for iterators that do not support += operator
 	template <typename It, typename std::enable_if_t<!std::is_same<typename std::iterator_traits<It>::iterator_category,std::random_access_iterator_tag>::value && !std::is_same<typename std::iterator_traits<It>::iterator_category,std::contiguous_iterator_tag>::value,int > = 0 >
-	iterator __insert(const_iterator & pos, It & beg, It & end) {
+	iterator __insert(const_iterator const& pos, It& beg, It const&  end) {
 	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
 	if (beg == end) return iterator(pos.itr_curr);
 		base_node* temp_head = create_node(*beg);
@@ -220,6 +227,7 @@ private:
 			del_node = curr;
 			curr = curr->next;
 			delete_node(del_node);
+			--n;
 		}
 		throw;
 	}

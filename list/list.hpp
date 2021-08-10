@@ -12,12 +12,30 @@ list<T,Allocator>::list() : pre_head(new base_node()),aft_tail(new base_node()) 
 	n = 0;
 }
 template <typename T, typename Allocator>
+list<T, Allocator>::list(allocator_type const& alloc) : list() {
+	this->value_allocator = alloc;
+}
+template <typename T, typename Allcoator> 
+list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) : list(alloc) {
+	base_node* curr = pre_head;
+	for (size_t i{0};i < count; ++i) {
+		node* new_node = create_node(curr,val);
+		curr->next = new_node;
+		curr = curr->next;
+	}
+	n = count;
+}
+template <typename T, typename Allocator>
 list<T, Allocator>::list(std::initializer_list<T> il, Allocator const&) : list() {
-	// FIX_ME: this needs to be optimized, but it works for now
-	for (auto const& each : il) {
-		insert(end(),each);
-	}	
-	n = il.size();
+	auto beg = il.begin();
+	auto end = il.end();
+	__insert(begin(),beg, end);
+}
+template <typename T, typename Allocator>
+template <typename It, typename std::iterator_traits<It>::pointer>
+list<T, Allocator>::list(It first, It last) :list() {
+	// FIX ME: this is a test, replace with real code
+	__insert(iterator(begin()), first, last);
 }
 // modifiers
 template <typename T, typename Allocator>
