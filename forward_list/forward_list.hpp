@@ -25,10 +25,16 @@ namespace brian {
 	template <typename T, typename Allocator>
 	forward_list<T,Allocator>::forward_list(size_type count, Allocator const& alloc) : forward_list(alloc) {
 		base_node* curr = pre_head;
-		for (size_t i = 0; i < count; ++i) {
-			derived_node* new_node = create_default_node();
-			curr->next = static_cast<base_node*>(new_node);
-			curr = curr->next;
+		try {
+			for (size_t i = 0; i < count; ++i) {
+				derived_node* new_node = create_default_node();
+				curr->next = static_cast<base_node*>(new_node);
+				curr = curr->next;
+			}
+		}
+		catch(...) {
+			~forward_list();
+			throw;
 		}
 	}
 	template <typename T, typename Allocator>
@@ -48,7 +54,7 @@ namespace brian {
 		}
 		catch (...) {
 			std::cerr << "call to constructor unsuccessful\n";
-			this->clear();
+			this->~forward_list());
 			throw;
 		}
 	}
@@ -67,8 +73,7 @@ namespace brian {
 			}
 		}
 		catch (...) {
-			clear();
-			std::cerr << "constructor call unsuccessful\n";
+			~forward_list();
 			throw;
 		}
 	}
@@ -85,8 +90,7 @@ namespace brian {
 			}
 		}
 		catch (...) {
-			std::cerr << "call to constructor unsuccessful\n";
-			clear();
+			~forward_list();
 			throw;
 		}
 	}
@@ -107,8 +111,7 @@ namespace brian {
 			}
 		}
 		catch(...) {
-			std::cerr << "constructor call unsuccessfull\n";
-			clear();
+			~forward_list();
 			throw;
 		}
 	}
