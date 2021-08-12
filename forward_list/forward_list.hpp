@@ -43,12 +43,8 @@ namespace brian {
 	forward_list<T, Allocator>::forward_list(std::initializer_list<T> const& il, Allocator const& alloc) : forward_list(alloc) {
 		derived_node* curr = static_cast<derived_node*>(pre_head);
 		derived_node* new_node = nullptr;
-		// QUESTION: why can i not catch this exception
 		try {
 			for (auto const& each : il)	{
-				//new_node = create_node(each);
-//				new_node = Traits::allocate(node_allocator, 1);
-//				Traits::construct(node_allocator, new_node, each);
 				new_node = create_node(each);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = static_cast<derived_node*>(curr->next);
@@ -56,7 +52,7 @@ namespace brian {
 		}
 		catch (...) {
 			std::cerr << "call to constructor unsuccessful\n";
-			this->~forward_list();
+			delete_node(pre_head);
 			throw;
 		}
 	}
@@ -93,7 +89,8 @@ namespace brian {
 			}
 		}
 		catch (...) {
-			~forward_list();
+			clear();
+			delete_node(pre_head);
 			throw;
 		}
 	}
@@ -108,13 +105,14 @@ namespace brian {
 		try {
 			while (other_curr != nullptr) {
 				new_node = create_node(other_curr->val);
-				curr->next = static_cast<base_node*>(new_node);
+				curr->next = new_node;
 				curr = curr->next;
 				other_curr = static_cast<derived_node*>(other_curr->next);
 			}
 		}
 		catch(...) {
-			~forward_list();
+			clear();
+			delete_node(pre_head);
 			throw;
 		}
 	}
@@ -137,22 +135,23 @@ namespace brian {
 		if (alloc == other.get_allocator()) {
 			value_allocator = std::move(other.value_allocator);
 			this->pre_head->next = other.pre_head->next;
+			other.pre_head->next = nullptr;
 		} else {
-			// QUESTIONS: should I allocate new nodes for this
-			// or should I just move nodes from other to this.
-			value_allocator = std::move(other.value_allocator);
-			base_node* other_curr = other.pre_head->next;
-			base_node* this_curr = this->pre_head;
-			base_node* other_temp;
-			// point this_curr to other_curr then point other curr off
-			while (other_curr != nullptr) {
-				other_temp = other_curr;
-				other_curr = other_curr->next;
-				this_curr->next = std::move(other_temp);
-				this_curr = this_curr->next;
+			base_node* this_curr = pre_head;
+			derived_node* other_curr = static_cast<derived_node*>(other.pre_head->next);
+			try {
+				while (other_curr) {
+					this_curr->next = create_node(std::move(other_curr->val));
+					this_curr = this_curr->next;
+					other_curr = static_cast<derived_node*>(other_curr->next);
+				}
+			} catch(...) {
+				// QUESTION:
+//				why do I not need to clean up the memory here
+//				for my element-wise move?
+				throw;
 			}
-		}
-		other.pre_head->next = nullptr;
+	}
 	}
 	// operators
 	// copy assignment
