@@ -16,7 +16,6 @@ template <typename T, typename Allocator>
 list<T, Allocator>::list(allocator_type const& alloc) : list() {
 	this->value_allocator = alloc;
 }
-// FIX ME: this is leaking one one, most of the constructors except for init_list are leading one node, and it is either the pre_head or aft_tail
 template <typename T, typename Allcoator> 
 list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
@@ -25,6 +24,7 @@ list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) 
 		curr->next = new_node;
 		curr = curr->next;
 	}
+	connect_nodes(curr,aft_tail);
 	n = count;
 }
 template <typename T, typename Allocator>
@@ -48,6 +48,7 @@ list<T,Allocator>::list(list const& other) :list() {
 		this_curr = new_node;
 		other_curr = other_curr->next;
 	}
+	connect_nodes(this_curr,aft_tail);
 	this->n = other.n;
 }
 // observers
