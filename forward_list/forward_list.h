@@ -209,7 +209,13 @@ private:
 	// helper methods
 	derived_node* create_default_node() {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
+		try {
 		Traits::construct(node_allocator, new_node);
+		} catch (...) {
+			delete_node(new_node);
+			new_node = nullptr;
+			throw;
+		}
 		return new_node;
 	}
 	template <typename ...Args>

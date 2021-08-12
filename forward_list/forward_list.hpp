@@ -28,12 +28,14 @@ namespace brian {
 		try {
 			for (size_t i = 0; i < count; ++i) {
 				derived_node* new_node = create_default_node();
-				curr->next = static_cast<base_node*>(new_node);
+				curr->next = new_node;
 				curr = curr->next;
 			}
 		}
 		catch(...) {
-			~forward_list();
+			clear();
+			delete_node(pre_head);
+			pre_head = nullptr;
 			throw;
 		}
 	}
@@ -54,7 +56,7 @@ namespace brian {
 		}
 		catch (...) {
 			std::cerr << "call to constructor unsuccessful\n";
-			this->~forward_list());
+			this->~forward_list();
 			throw;
 		}
 	}
@@ -73,7 +75,8 @@ namespace brian {
 			}
 		}
 		catch (...) {
-			~forward_list();
+			clear();
+			delete_node(pre_head);
 			throw;
 		}
 	}
@@ -132,11 +135,11 @@ namespace brian {
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other, Allocator const& alloc) : forward_list() {
 		if (alloc == other.get_allocator()) {
-			std::cout << "not in else\n";
 			value_allocator = std::move(other.value_allocator);
 			this->pre_head->next = other.pre_head->next;
 		} else {
-			std::cout << "in else\n";
+			// QUESTIONS: should I allocate new nodes for this
+			// or should I just move nodes from other to this.
 			value_allocator = std::move(other.value_allocator);
 			base_node* other_curr = other.pre_head->next;
 			base_node* this_curr = this->pre_head;
@@ -519,8 +522,13 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::~forward_list() {
-		clear();
-		delete pre_head;
+		base_node* curr = pre_head;
+		base_node* temp = curr;
+		while (curr) {
+			temp = curr;
+			curr = curr->next;
+			delete_node(temp);
+		}
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {
