@@ -59,6 +59,7 @@ class list {
 	list();
 	explicit list(allocator_type const& alloc);
 	list(size_t count, T const& val, allocator_type const& alloc = Allocator());
+	explicit list(size_type count, allocator_type const& alloc = allocator_type());
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	list(It first, It last, Allocator const& alloc);
 	list(list const& other);
@@ -67,7 +68,6 @@ class list {
 	list(list &&other, Allocator const& alloc);
 	list(std::initializer_list<T> il, Allocator const& alloc = Allocator());
 	// modifiers
-	explicit list(size_type count, allocator_type const& alloc = allocator_type());
 	template <typename It, typename std::iterator_traits<It>::pointer>
 	list(list const& other);
 	void clear() noexcept;	
@@ -243,6 +243,18 @@ private:
 	connect_nodes(pos.itr_curr->prev,temp_head);
 	connect_nodes(curr,pos.itr_curr);
 	return iterator(temp_head);
+	}
+	void __cp(list const& other) {
+		base_node* other_curr = other.pre_head->next;
+		base_node* this_curr = this->pre_head;
+		while (other_curr != other.end()) {
+			node* new_node = create_node(this_curr,static_cast<node*>(other_curr)->val);
+			this_curr->next = new_node;	
+			this_curr = new_node;
+			other_curr = other_curr->next;
+		}
+		connect_nodes(this_curr,aft_tail);
+		this->n = other.n;
 	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN

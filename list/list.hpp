@@ -29,6 +29,18 @@ list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) 
 	connect_nodes(curr,aft_tail);
 	n = count;
 }
+// default fill construcotr
+template <typename T, typename Allcoator>
+list<T,Allcoator>::list(size_t count, Allcoator const& alloc) : list(alloc) {
+	base_node* curr = pre_head;
+	for (size_t i{0};i < count; ++i) {
+		node* new_node = create_node(curr);
+		curr->next = new_node;
+		curr = curr->next;
+	}
+	connect_nodes(curr,aft_tail);
+	n = count;
+}
 // initialization list constructor
 template <typename T, typename Allocator>
 list<T, Allocator>::list(std::initializer_list<T> il, Allocator const& alloc) : list(alloc) {
@@ -45,16 +57,43 @@ list<T, Allocator>::list(It first, It last, Allocator const& alloc) :list(alloc)
 template <typename T, typename Allocator>
 list<T,Allocator>::list(list const& other) :list() {
 	this->value_allocator = std::allocator_traits<Allocator>::select_on_container_copy_construction(other.get_allocator());
-	base_node* other_curr = other.pre_head->next;
-	base_node* this_curr = this->pre_head;
-	while (other_curr != other.end()) {
-		node* new_node = create_node(this_curr,static_cast<node*>(other_curr)->val);
-		this_curr->next = new_node;	
-		this_curr = new_node;
-		other_curr = other_curr->next;
-	}
-	connect_nodes(this_curr,aft_tail);
+	__cp(other);
+}
+// copy constructor allocator-extended
+template <typename T, typename Allocator>
+list<T,Allocator>::list(list const& other, Allocator const& alloc) : list(alloc) {
+	__cp(other);
+}
+// move constructor
+template <typename T, typename Allocator>
+list<T, Allocator>::list(list && other) :list() {
+	this->value_allocator = std::move(other.value_allocator);
+	connect_nodes(this->pre_head,other.pre_head->next);
+	connect_nodes(other.aft_tail->prev,this->aft_tail);
 	this->n = other.n;
+	other.pre_head->next = other.aft_tail;
+}
+// move constructor allocator exctended
+template <typename T, typename Allocator>
+list<T, Allocator>::list(list && other, Allocator const& alloc) :list() {
+	if (alloc != other.get_allocator()) {
+		this->value_allocator = std::move(other.value_allocator);
+		node* other_curr = static_cast<node*>(other.pre_head->next);	
+		base_node* this_curr = this->pre_head;
+		while (other_curr != other.end()) {
+			node* new_node = create_node(this_curr,std::move(other_curr->val));
+			this_curr->next = new_node;
+			this_curr = new_node;
+			other_curr = static_cast<node*>(other_curr->next);
+		}
+		connect_nodes(this_curr,this->aft_tail);
+		this->n = other.n;
+	}
+	this->value_allocator = std::move(other.value_allocator);
+	connect_nodes(this->pre_head,other.pre_head->next);
+	connect_nodes(other.aft_tail->prev,this->aft_tail);
+	this->n = other.n;
+	other.pre_head->next = other.aft_tail;
 }
 // observers
 template <typename T, typename Allcoator>
