@@ -154,7 +154,7 @@ namespace brian {
 	}
 	}
 	// operators
-	// copy assignment
+	// copy assignment, provides basic exception guarentee
 	template <typename T, typename Allocator>
 	forward_list<T,Allocator>& forward_list<T, Allocator>::operator=(forward_list const& other) {
 		// check if we shoud assign other.get_allocator() to this
@@ -297,6 +297,7 @@ namespace brian {
 		derived_node* this_curr = static_cast<derived_node*>(this->begin().itr_curr);
 		base_node* temp = this->before_begin().itr_curr;
 		size_type this_count = 0;
+		// start by reusing nodes, assigning the new value as needed
 		while (this_curr != nullptr && this_count < count) {
 			temp = this_curr;
 			this_curr->val = val;
@@ -304,11 +305,16 @@ namespace brian {
 			++this_count;
 		}
 		if (this_count < count) {
-			while (this_count < count) {
-				// we need to allocate more nodes
-				temp->next = static_cast<base_node*>(create_node(val));
-				temp = temp->next;
-				++this_count;
+			try {
+				while (this_count < count) {
+					// we need to allocate more nodes
+					temp->next = create_node(val);
+					temp = temp->next;
+					++this_count;
+				}
+			}
+			catch (...) {
+				throw;
 			}
 		}
 		else {
