@@ -16,6 +16,7 @@ template <typename T, typename Allocator>
 list<T, Allocator>::list(allocator_type const& alloc) : list() {
 	this->value_allocator = alloc;
 }
+// FIX ME: this is leaking one one, most of the constructors except for init_list are leading one node, and it is either the pre_head or aft_tail
 template <typename T, typename Allcoator> 
 list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
@@ -27,7 +28,7 @@ list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) 
 	n = count;
 }
 template <typename T, typename Allocator>
-list<T, Allocator>::list(std::initializer_list<T> il, Allocator const&) : list() {
+list<T, Allocator>::list(std::initializer_list<T> il, Allocator const& alloc) : list(alloc) {
 	auto beg = il.begin();
 	__insert(begin(),beg, il.end());
 }
@@ -55,6 +56,7 @@ size_t list<T,Allcoator>::max_size() const noexcept {
 	return Traits::max_size(node_allocator);
 }
 // modifiers
+// insert
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator 
 list<T,Allocator>::insert(const_iterator pos, T const&val) {
@@ -121,14 +123,33 @@ list<T, Allcoator>::insert(const_iterator pos, std::initializer_list<T> il) {
 template <typename T, typename Allocator>
 void list<T, Allocator>::pop_back() {
 	base_node* del_node = aft_tail->prev;
-	connect_nodes(aft_tail->prev->prev, aft_tail);
+	connect_nodes(del_node->prev, aft_tail);
 	delete_node(del_node);
+	--n;
+}
+template <typename T, typename Allocator>
+void list<T, Allocator>::pop_front() {
+	base_node* del_node = pre_head->next;		
+	connect_nodes(pre_head, del_node->next);
+	delete_node(del_node);
+	--n;
+}
+// erase
+template <typename T, typename Allocator>
+typename list<T, Allocator>::iterator
+list<T, Allocator>::erase(const_iterator pos) {
+	base_node* del_node = pos;
+	connect_nodes(pos.itr_curr->prev, pos.itr_curr->next);
+	delete_node(del_node);
+	--n;
 }
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
 	base_node* curr = pre_head;
 	base_node* del_node;
+	std::cout << "destructor\n";
 	while (curr) {
+		std::cout << "here\n";
 		del_node = curr;
 		curr = curr->next;
 		delete_node(del_node);

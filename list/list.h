@@ -23,6 +23,7 @@ class list {
 	};
 	struct node :public base_node{
 		T val;
+		node() : base_node() {}
 		// constructor overload used when no node is passed
 		template <typename U,typename ...Args, typename = 
 			std::enable_if_t<!std::is_same<U,base_node*>::value && !std::is_same<U,node*>::value>>
@@ -58,19 +59,19 @@ class list {
 	list();
 	explicit list(allocator_type const& alloc);
 	list(size_t count, T const& val, allocator_type const& alloc = Allocator());
-	list(std::initializer_list<T> il, Allocator const& alloc = Allocator());
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	list(It first, It last, Allocator const& alloc);
 	list(list const& other);
 	list(list const& other, Allocator const& alloc);
 	list(list && other);
 	list(list &&other, Allocator const& alloc);
-	list(std::initializer_list<T> il);
+	list(std::initializer_list<T> il, Allocator const& alloc = Allocator());
 	// modifiers
 	explicit list(size_type count, allocator_type const& alloc = allocator_type());
 	template <typename It, typename std::iterator_traits<It>::pointer>
 	list(list const& other);
 	void clear() noexcept;	
+	// insert
 	iterator insert(const_iterator pos, T const& val); 
 	iterator insert(const_iterator pos, T && val);
 	iterator insert(const_iterator pos, size_t, T const& val);
@@ -78,6 +79,9 @@ class list {
 	iterator insert(const_iterator pos, It beg, It end);
 	iterator insert(const_iterator pos, std::initializer_list<T> il);
 	void pop_back();
+	void pop_front();
+	iterator erase(const_iterator pos);
+	iterator erase(const_iterator first, const_iterator last);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
