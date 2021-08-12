@@ -12,10 +12,12 @@ list<T,Allocator>::list() : pre_head(new base_node()),aft_tail(new base_node()) 
 	aft_tail->prev = pre_head;
 	n = 0;
 }
+// allocator constructor
 template <typename T, typename Allocator>
 list<T, Allocator>::list(allocator_type const& alloc) : list() {
 	this->value_allocator = alloc;
 }
+// fill constructor
 template <typename T, typename Allcoator> 
 list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
@@ -27,16 +29,19 @@ list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) 
 	connect_nodes(curr,aft_tail);
 	n = count;
 }
+// initialization list constructor
 template <typename T, typename Allocator>
 list<T, Allocator>::list(std::initializer_list<T> il, Allocator const& alloc) : list(alloc) {
 	auto beg = il.begin();
 	__insert(begin(),beg, il.end());
 }
+// range constructor
 template <typename T, typename Allocator>
 template <typename It, typename std::iterator_traits<It>::pointer>
 list<T, Allocator>::list(It first, It last, Allocator const& alloc) :list(alloc) {
 	__insert(iterator(begin()), first, last);
 }
+// copy constructor
 template <typename T, typename Allocator>
 list<T,Allocator>::list(list const& other) :list() {
 	this->value_allocator = std::allocator_traits<Allocator>::select_on_container_copy_construction(other.get_allocator());
