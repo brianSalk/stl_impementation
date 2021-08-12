@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream> // DELTE ME: debug only
 #include "list.h"
 #include <initializer_list>
 #include <iterator>
@@ -21,10 +22,20 @@ list<T, Allocator>::list(allocator_type const& alloc) : list() {
 template <typename T, typename Allcoator> 
 list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
-	for (size_t i{0};i < count; ++i) {
-		node* new_node = create_node(curr,val);
-		curr->next = new_node;
-		curr = curr->next;
+	try {
+		for (size_t i{0};i < count; ++i) {
+			node* new_node = create_node(curr,val);
+			curr->next = new_node;
+			curr = curr->next;
+		}
+	} catch (...) {
+		// connect aft_tail to make list complete
+		connect_nodes(curr,aft_tail);
+		clear();
+		delete_node(pre_head);
+		pre_head = nullptr;
+		delete_node(aft_tail);
+		throw;
 	}
 	connect_nodes(curr,aft_tail);
 	n = count;
@@ -33,10 +44,19 @@ list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) 
 template <typename T, typename Allcoator>
 list<T,Allcoator>::list(size_t count, Allcoator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
-	for (size_t i{0};i < count; ++i) {
-		node* new_node = create_node(curr);
-		curr->next = new_node;
-		curr = curr->next;
+	try {
+		for (size_t i{0};i < count; ++i) {
+			node* new_node = create_node(curr);
+			curr->next = new_node;
+			curr = curr->next;
+		}
+	} catch (...) {
+		connect_nodes(curr,aft_tail);
+		clear();
+		delete_node(pre_head);
+		pre_head = nullptr;
+		delete_node(aft_tail);
+		throw;
 	}
 	connect_nodes(curr,aft_tail);
 	n = count;
@@ -45,13 +65,26 @@ list<T,Allcoator>::list(size_t count, Allcoator const& alloc) : list(alloc) {
 template <typename T, typename Allocator>
 list<T, Allocator>::list(std::initializer_list<T> il, Allocator const& alloc) : list(alloc) {
 	auto beg = il.begin();
-	__insert(begin(),beg, il.end());
+	try {
+		__insert(begin(),beg, il.end());
+	} catch (...) {
+		delete_node(pre_head);
+		delete_node(aft_tail);
+		pre_head = nullptr;
+	}
 }
 // range constructor
 template <typename T, typename Allocator>
 template <typename It, typename std::iterator_traits<It>::pointer>
 list<T, Allocator>::list(It first, It last, Allocator const& alloc) :list(alloc) {
-	__insert(iterator(begin()), first, last);
+	try {
+		__insert(iterator(begin()), first, last);
+	} catch (...) {
+		delete_node(pre_head);
+		delete_node(aft_tail);
+		pre_head=nullptr;
+		throw;
+	}
 }
 // copy constructor
 template <typename T, typename Allocator>
@@ -74,6 +107,7 @@ list<T, Allocator>::list(list && other) :list() {
 	other.pre_head->next = other.aft_tail;
 }
 // move constructor allocator exctended
+// FIX ME: exception safety with move semantics is hard!
 template <typename T, typename Allocator>
 list<T, Allocator>::list(list && other, Allocator const& alloc) :list() {
 	if (alloc != other.get_allocator()) {
@@ -101,6 +135,16 @@ size_t list<T,Allcoator>::max_size() const noexcept {
 	return Traits::max_size(node_allocator);
 }
 // modifiers
+template <typename T,typename Allocator>
+void list<T,Allocator>::clear() noexcept {
+	base_node* curr = pre_head->next;
+	while (curr != end().itr_curr) {
+		base_node* del_node = curr;	
+		curr = curr->next;
+		delete_node(del_node);
+	}
+	n = 0;
+}
 // insert
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator 
@@ -192,9 +236,7 @@ template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
 	base_node* curr = pre_head;
 	base_node* del_node;
-	std::cout << "destructor\n";
 	while (curr) {
-		std::cout << "here\n";
 		del_node = curr;
 		curr = curr->next;
 		delete_node(del_node);

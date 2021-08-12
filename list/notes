@@ -1,0 +1,6 @@
+debuggin exception safe constructors is difficult because they provide a strong guarentee
+each constructor must:
+not leak memory,
+clear ALL of its memory (including pre_head and aft_tail)
+
+to make sure the constructor clears all of its memory, you can comment out the destrcutor and see if a throwing constructor leaks.

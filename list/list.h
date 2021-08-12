@@ -61,15 +61,13 @@ class list {
 	list(size_t count, T const& val, allocator_type const& alloc = Allocator());
 	explicit list(size_type count, allocator_type const& alloc = allocator_type());
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
-	list(It first, It last, Allocator const& alloc);
+	list(It first, It last, Allocator const& alloc = Allocator());
 	list(list const& other);
 	list(list const& other, Allocator const& alloc);
 	list(list && other);
 	list(list &&other, Allocator const& alloc);
 	list(std::initializer_list<T> il, Allocator const& alloc = Allocator());
 	// modifiers
-	template <typename It, typename std::iterator_traits<It>::pointer>
-	list(list const& other);
 	void clear() noexcept;	
 	// insert
 	iterator insert(const_iterator pos, T const& val); 
@@ -231,7 +229,7 @@ private:
 		// time to clean up
 		base_node* del_node;
 		curr = temp_head;
-		while (curr) {
+		while (curr != end().itr_curr) {
 			del_node = curr;
 			curr = curr->next;
 			delete_node(del_node);
@@ -247,14 +245,29 @@ private:
 	void __cp(list const& other) {
 		base_node* other_curr = other.pre_head->next;
 		base_node* this_curr = this->pre_head;
-		while (other_curr != other.end()) {
-			node* new_node = create_node(this_curr,static_cast<node*>(other_curr)->val);
-			this_curr->next = new_node;	
-			this_curr = new_node;
-			other_curr = other_curr->next;
+		try {
+			while (other_curr != other.end()) {
+				node* new_node = create_node(this_curr,static_cast<node*>(other_curr)->val);
+				this_curr->next = new_node;	
+				this_curr = new_node;
+				other_curr = other_curr->next;
+			}
+		} catch (...) {
+			// clean up data
+			base_node* curr = this->pre_head;
+			base_node* del_node;
+			while (curr) {
+				del_node = curr;
+				curr = curr->next;
+				delete_node(del_node);
+			}
+			//delete_node(aft_tail);
+			pre_head = nullptr;
+			throw;
 		}
 		connect_nodes(this_curr,aft_tail);
 		this->n = other.n;
+		throw;
 	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
