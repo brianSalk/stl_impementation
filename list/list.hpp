@@ -313,37 +313,11 @@ void list<T,Allocator>::emplace_back(Args && ...args) {
 // or using pop_back() and push_back
 template <typename T, typename Allocator>
 void list<T,Allocator>::resize(size_t new_size) {
-	auto curr = aft_tail->prev;
-	if (new_size < n) {
-		while (new_size < n) {
-			auto del_node = curr;
-			curr = curr->prev;
-			delete_node(del_node);
-			--n;
-		}	
-		connect_nodes(curr,aft_tail);
-	}
-	else if (new_size > n++){
-		base_node* temp_head = create_node();
-		base_node* curr = temp_head;
-		try {
-			while (new_size > n++) {
-				curr->next = create_node(curr);
-				curr = curr->next;
-			}
-		} catch (...) {
-			auto del_node = temp_head;
-			while (temp_head) {
-				del_node = temp_head;
-				temp_head = temp_head->next;
-				delete_node(del_node);
-				--n;
-			}
-			throw;
-		}
-		connect_nodes(aft_tail->prev, temp_head);
-		connect_nodes(curr,aft_tail);
-	}
+	__resize(new_size);
+}
+template <typename T, typename Allocator>
+void list<T,Allocator>::resize(size_t new_size, T const& val) {
+	__resize(new_size,val);
 }
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
