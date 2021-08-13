@@ -21,8 +21,8 @@ list<T, Allocator>::list(allocator_type const& alloc) : list() {
 	this->value_allocator = alloc;
 }
 // fill constructor
-template <typename T, typename Allcoator> 
-list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) : list(alloc) {
+template <typename T, typename Allocator> 
+list<T, Allocator>::list(size_type count, T const& val, Allocator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
 	try {
 		for (size_t i{0};i < count; ++i) {
@@ -43,8 +43,8 @@ list<T, Allcoator>::list(size_type count, T const& val, Allcoator const& alloc) 
 	n = count;
 }
 // default fill construcotr
-template <typename T, typename Allcoator>
-list<T,Allcoator>::list(size_t count, Allcoator const& alloc) : list(alloc) {
+template <typename T, typename Allocator>
+list<T,Allocator>::list(size_t count, Allocator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
 	try {
 		for (size_t i{0};i < count; ++i) {
@@ -132,8 +132,8 @@ list<T, Allocator>::list(list && other, Allocator const& alloc) :list() {
 	other.pre_head->next = other.aft_tail;
 }
 // observers
-template <typename T, typename Allcoator>
-size_t list<T,Allcoator>::max_size() const noexcept {
+template <typename T, typename Allocator>
+size_t list<T,Allocator>::max_size() const noexcept {
 	return Traits::max_size(node_allocator);
 }
 // modifiers
@@ -200,15 +200,15 @@ list<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
 	n+=count;
 	return iterator(temp_head);
 }
-template <typename T, typename Allcoator>
+template <typename T, typename Allocator>
 template <typename It, typename std::iterator_traits<It>::pointer>
-typename list<T,Allcoator>::iterator
-list<T,Allcoator>::insert(const_iterator pos, It beg, It end) {
+typename list<T,Allocator>::iterator
+list<T,Allocator>::insert(const_iterator pos, It beg, It end) {
 	return __insert(pos,beg,end);
 }
-template <typename T, typename Allcoator>
-typename list<T, Allcoator>::iterator
-list<T, Allcoator>::insert(const_iterator pos, std::initializer_list<T> il) {
+template <typename T, typename Allocator>
+typename list<T, Allocator>::iterator
+list<T, Allocator>::insert(const_iterator pos, std::initializer_list<T> il) {
 	return insert(pos,il.begin(), il.end());
 }
 template <typename T, typename Allocator>
@@ -282,6 +282,7 @@ void list<T,Allocator>::push_back(T && val) {
 	connect_nodes(new_node, aft_tail);
 	++n;
 }
+// emplace methods
 template <typename T, typename Allocator>
 template <typename ...Args>
 typename list<T,Allocator>::iterator
@@ -306,6 +307,43 @@ void list<T,Allocator>::emplace_back(Args && ...args) {
 	auto new_node = create_node(std::forward<Args>(args)...);	
 	connect_nodes(aft_tail->prev,new_node);
 	connect_nodes(new_node, aft_tail);
+}
+// resize provides a basic guarentee
+// TO DO: benchmark and compare difference between using curr to delete
+// or using pop_back() and push_back
+template <typename T, typename Allocator>
+void list<T,Allocator>::resize(size_t new_size) {
+	auto curr = aft_tail->prev;
+	if (new_size < n) {
+		while (new_size < n) {
+			auto del_node = curr;
+			curr = curr->prev;
+			delete_node(del_node);
+			--n;
+		}	
+		connect_nodes(curr,aft_tail);
+	}
+	else if (new_size > n++){
+		base_node* temp_head = create_node();
+		base_node* curr = temp_head;
+		try {
+			while (new_size > n++) {
+				curr->next = create_node(curr);
+				curr = curr->next;
+			}
+		} catch (...) {
+			auto del_node = temp_head;
+			while (temp_head) {
+				del_node = temp_head;
+				temp_head = temp_head->next;
+				delete_node(del_node);
+				--n;
+			}
+			throw;
+		}
+		connect_nodes(aft_tail->prev, temp_head);
+		connect_nodes(curr,aft_tail);
+	}
 }
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {

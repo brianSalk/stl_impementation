@@ -96,9 +96,7 @@ class list {
 	template <typename ...Args>
 	void emplace_back(Args && ...args);
 	// FIX ME: work on making a template
-	void resize(size_t new_size) {
-		std::cout << "it works!!\n";
-	}
+	void resize(size_t new_size);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -190,18 +188,6 @@ private:
 		}
 		return new_node;
 	}
-	template <typename ...Args>
-	node* create_default_node() {
-		node* new_node = Traits::allocate(node_allocator,1);
-		try {
-			Traits::construct(node_allocator,new_node);
-		}
-		catch (...) {
-			Traits::deallocate(node_allocator,new_node,1);
-			throw;
-		}
-		return new_node;
-	}
 	void delete_node(base_node* del_node) {
 		Traits::destroy(node_allocator, static_cast<node*>(del_node));
 		Traits::deallocate(node_allocator, static_cast<node*>(del_node),1);
@@ -216,11 +202,12 @@ private:
 	iterator __insert(const_iterator const& pos, It& beg, It const& end) {
 	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
 	if (beg == end) return iterator(pos.itr_curr);
-		base_node* temp_head = create_node(*beg);
-		base_node* curr = temp_head;
+	auto __beg = beg;
+	base_node* temp_head = create_node(*beg);
+	base_node* curr = temp_head;
 	try {
-		auto it = ++beg;
-		for (it = beg; it != end;++it) {
+		auto it = ++__beg;
+		for (it = __beg; it != end;++it) {
 			curr->next = create_node(curr,*it);
 			curr = curr->next;
 		}
