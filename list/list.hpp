@@ -4,6 +4,8 @@
 #include <initializer_list>
 #include <iterator>
 #include <memory>
+#include <type_traits>
+#include <utility>
 namespace brian { 
 // constuctors
 // default constructor
@@ -233,6 +235,79 @@ list<T, Allocator>::erase(const_iterator pos) {
 	--n;
 }
 template <typename T, typename Allocator>
+typename list<T,Allocator>::iterator
+list<T,Allocator>::erase(const_iterator first, const_iterator last) {
+	base_node* temp;
+	base_node* end_of_first = first.itr_curr->prev;
+	size_t to_add = 0;
+	while (first != last) {
+		temp = first.itr_curr;
+		++first;
+		delete_node(temp);
+		++to_add;
+	}
+	n -= to_add;
+	connect_nodes(end_of_first,last.itr_curr);
+	auto ret = (last == end()) ? end() : last.itr_curr->next;
+	return ret;
+}
+// pushers
+template <typename T, typename Allocator>
+void list<T, Allocator>::push_front(T const& val) {
+	auto new_node = create_node(val);
+	connect_nodes(new_node, pre_head->next);
+	connect_nodes(pre_head, new_node);
+	++n;
+}
+
+template <typename T, typename Allocator>
+void list<T, Allocator>::push_front(T && val) {
+	auto new_node = create_node(std::move(val));
+	connect_nodes(new_node, pre_head->next);
+	connect_nodes(pre_head, new_node);
+	++n;
+}
+template <typename T, typename Allocator>
+void list<T,Allocator>::push_back(T const& val) {
+	auto new_node = create_node(val);	
+	connect_nodes(aft_tail->prev, new_node);
+	connect_nodes(new_node, aft_tail);
+	++n;
+}
+
+template <typename T, typename Allocator>
+void list<T,Allocator>::push_back(T && val) {
+	auto new_node = create_node(std::move(val));	
+	connect_nodes(aft_tail->prev, new_node);
+	connect_nodes(new_node, aft_tail);
+	++n;
+}
+template <typename T, typename Allocator>
+template <typename ...Args>
+typename list<T,Allocator>::iterator
+list<T,Allocator>::emplace(const_iterator pos, Args && ...args) {
+	auto new_node = create_node(std::forward<Args>(args)...);
+	connect_nodes(pos.itr_curr->prev,new_node);
+	connect_nodes(new_node,pos.itr_curr);
+	++n;
+	return iterator(new_node);
+}
+template <typename T, typename Allocator>
+template <typename ...Args>
+void list<T,Allocator>::emplace_front(Args &&...args) {
+		auto new_node = create_node(std::forward<Args>(args)...);
+		connect_nodes(new_node, pre_head->next);
+		connect_nodes(pre_head, new_node);
+		++n;
+}
+template <typename T, typename Allocator>
+template <typename ...Args>
+void list<T,Allocator>::emplace_back(Args && ...args) {
+	auto new_node = create_node(std::forward<Args>(args)...);	
+	connect_nodes(aft_tail->prev,new_node);
+	connect_nodes(new_node, aft_tail);
+}
+template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
 	base_node* curr = pre_head;
 	base_node* del_node;
@@ -242,4 +317,5 @@ list<T,Allocator>::~list() {
 		delete_node(del_node);
 	}
 }
+
 }// END OF NAMESPACE BRIAN

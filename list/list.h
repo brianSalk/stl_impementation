@@ -5,6 +5,7 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <iostream> // DELETE ME: debugging
 
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>>
@@ -76,10 +77,28 @@ class list {
 	template <typename It, typename std::iterator_traits<It>::pointer = nullptr>
 	iterator insert(const_iterator pos, It beg, It end);
 	iterator insert(const_iterator pos, std::initializer_list<T> il);
+	// pop methods
 	void pop_back();
 	void pop_front();
+	// erase
 	iterator erase(const_iterator pos);
 	iterator erase(const_iterator first, const_iterator last);
+	// pushers
+	void push_front(T const& val);
+	void push_front(T && val);
+	void push_back(T const& val);
+	void push_back(T && val);
+	// emplace methods
+	template <typename ...Args>
+	iterator emplace(const_iterator pos, Args && ...args);
+	template <typename ...Args>
+	void emplace_front(Args && ...args);
+	template <typename ...Args>
+	void emplace_back(Args && ...args);
+	// FIX ME: work on making a template
+	void resize(size_t new_size) {
+		std::cout << "it works!!\n";
+	}
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -164,6 +183,18 @@ private:
 		node* new_node = Traits::allocate(node_allocator,1);
 		try {
 			Traits::construct(node_allocator,new_node,std::forward<Args>(args)...);
+		}
+		catch (...) {
+			Traits::deallocate(node_allocator,new_node,1);
+			throw;
+		}
+		return new_node;
+	}
+	template <typename ...Args>
+	node* create_default_node() {
+		node* new_node = Traits::allocate(node_allocator,1);
+		try {
+			Traits::construct(node_allocator,new_node);
 		}
 		catch (...) {
 			Traits::deallocate(node_allocator,new_node,1);
