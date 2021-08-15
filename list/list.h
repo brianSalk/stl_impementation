@@ -115,6 +115,13 @@ class list {
 	template <typename Pred>
 	requires std::predicate<Pred,T,T>
 	void merge(list&& other, Pred pred);
+	void splice(const_iterator pos, list& other);
+	void splice(const_iterator pos, list&& other);
+	void splice(const_iterator pos, list& other, const_iterator it);
+	void splice(const_iterator pos, list&& other, const_iterator it);
+	void splice(const_iterator pos, list& other, const_iterator first, const_iterator last);
+	
+	void splice(const_iterator pos, list&& other, const_iterator first, const_iterator last);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -401,7 +408,7 @@ private:
 				}
 			}
 		} catch (...) {
-			// prevent leak
+			// prevent leak.
 			connect_nodes(curr,this_curr);
 			std::cout << right_curr->val << '\n';
 			auto c = right_curr;
@@ -425,6 +432,17 @@ private:
 			this->aft_tail = right_end;
 			right_end = temp;
 		}
+	}
+	// use this overload for all six functions
+	void __splice(const_iterator  pos,list&& other, const_iterator first, const_iterator last) {
+		// move [first,last) to this at pos
+		auto end_of_first = pos.itr_curr->prev; // one before pos
+		auto front_of_second = pos.itr_curr; // pos
+		auto pre_first = first.itr_curr->prev; // one before first
+
+		connect_nodes(end_of_first, first.itr_curr);
+		connect_nodes(last.itr_curr->prev,front_of_second);
+		connect_nodes(pre_first,last.itr_curr);
 	}
 };// END CLASS LIST
 template <typename T, typename A>

@@ -399,5 +399,39 @@ requires std::predicate<Cmp,T,T>
 void list<T,Allocator>::merge(list&& other,Cmp cmp) {
 	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail,cmp);
 }
+template <typename T, typename Allocator>
+void list<T,Allocator>::splice(const_iterator pos, list& other) {
+	__splice(pos,std::forward<list>(other),other.begin(),other.end());
+}
+
+template <typename T, typename Allocator>
+void list<T,Allocator>::splice(const_iterator pos, list&& other) {
+	__splice(pos,std::forward<list>(other),other.begin(),other.end());
+}
+
+template <typename T, typename Allocator>
+void list<T,Allocator>::splice(const_iterator pos, list& other, const_iterator it) {
+	auto it2 = it;
+	++it2;
+	__splice(pos,std::forward<list>(other),it,it2);
+}
+
+template <typename T, typename Allocator>
+void list<T,Allocator>::splice(const_iterator pos, list&& other, const_iterator it) {
+	auto it2 = it;
+	++it2;
+	__splice(pos,std::forward<list>(other),it,it2);
+}
+
+
+template <typename T, typename Allocator>
+void list<T,Allocator>::splice(const_iterator pos, list& other, const_iterator first, const_iterator last) {
+	__splice(pos,std::forward<list>(other),first,last);
+}
+
+template <typename T, typename Allocator>
+void list<T,Allocator>::splice(const_iterator pos, list&& other, const_iterator first, const_iterator last) {
+	__splice(pos,std::forward<list>(other),first,last);
+}
 
 }// END OF NAMESPACE BRIAN
