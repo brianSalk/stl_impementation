@@ -112,6 +112,10 @@ class list {
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
 	size_t max_size() const noexcept;
 	Allocator get_allocator() const noexcept { return value_allocator; }
+	reference front() { return *begin(); }
+	const_reference front() const { return *begin(); }
+	reference back() { return end().itr_curr->prev; }
+	const_reference back() const { return end().itr_curr->prev; }
 	// iterator_methods
 	iterator begin() { return iterator(pre_head->next); }
 	iterator end() { return iterator(aft_tail); }
