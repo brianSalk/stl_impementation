@@ -362,11 +362,20 @@ size_t list<T,Allocator>::remove_if(Pred pred) {
 	return __remove_if(pred);
 }
 template <typename T, typename Allocator>
-void list<T,Allocator>::swap(list const& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value) {
+void list<T,Allocator>::swap(list& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value) {
 	if (std::allocator_traits<Allocator>::propagate_on_container_swap::value) {
 		// is this an unqualified call to swap?
-			swap(*this,other);
+		std::swap(this->value_allocator,other.value_allocator);
 	}
+	auto temp_first = this->pre_head;
+	auto temp_last = this->aft_tail;
+	this->pre_head = other.pre_head;
+	this->aft_tail = other.aft_tail;
+	other.pre_head = temp_first;
+	other.aft_tail = temp_last;
+	auto temp_size = this->n;
+	this->n = other.n;
+	other.n = temp_size;
 }
 
 }// END OF NAMESPACE BRIAN

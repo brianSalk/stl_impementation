@@ -39,7 +39,7 @@ class list {
 	using allocator_type = Allocator;
 	using size_type  = std::size_t;
 	using difference_type = std::ptrdiff_t;
-	using referene = value_type&;
+	using reference = value_type&;
 	using const_reference = value_type const&;
 	using pointer = typename std::allocator_traits<Allocator>::pointer;
 	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
@@ -106,7 +106,7 @@ class list {
 	template <typename Pred>
 	requires std::predicate<Pred,T>
 	size_t remove_if(Pred pred);
-	void swap(list const& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value);
+	void swap(list& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -181,6 +181,9 @@ private:
 			return list_iterator(itr_curr);
 		}
 		// overload the -> operator
+		pointer operator->() {
+			return &static_cast<node*>(itr_curr)->val;
+		}
 
 	private:
 		base_node* itr_curr;
@@ -356,6 +359,11 @@ private:
 		n -= count;
 		return count;
 	}
+	// friends/non-member functions
 };// END CLASS LIST
+template <typename T, typename A>
+void swap(list<T,A>& lhs, list<T,A>&rhs) noexcept(noexcept(lhs.swap(rhs))) {
+	lhs.swap(rhs);
+}
 }// END NAMESPACE BRIAN
 #include "list.hpp"
