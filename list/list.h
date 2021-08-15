@@ -377,22 +377,37 @@ private:
 		}
 		return true;
 	}
+	// must provide basic exception garentee if cmp throws an exception
 	template <typename Cmp>
 	void __merge(node* right_curr, base_node*& right_end,Cmp const& cmp) {
 		if (this->pre_head->next == right_curr) return;
 		node* this_curr = static_cast<node*>(this->pre_head->next);
 		base_node* curr = this->pre_head;
 		base_node* right_beg = right_curr->prev;
-		while (this_curr != this->end().itr_curr && right_curr != right_end) {
-			if (cmp(right_curr->val,this_curr->val)) {
-				connect_nodes(curr, right_curr);
-				curr = curr->next;
-				right_curr = static_cast<node*>(right_curr->next);
-			} else {
-				connect_nodes(curr, this_curr);
-				curr = curr->next;
-				this_curr = static_cast<node*>(this_curr->next);
+		try {
+			while (this_curr != this->end().itr_curr && right_curr != right_end) {
+				if (cmp(right_curr->val,this_curr->val)) {
+					connect_nodes(curr, right_curr);
+					curr = curr->next;
+					right_curr = static_cast<node*>(right_curr->next);
+				} else {
+					connect_nodes(curr, this_curr);
+					curr = curr->next;
+					this_curr = static_cast<node*>(this_curr->next);
+				}
 			}
+		} catch (...) {
+			// prevent leak
+			connect_nodes(curr,this_curr);
+			std::cout << right_curr->val << '\n';
+			auto c = right_curr;
+			while (c != right_end) {
+				auto del_node = c;
+				c = static_cast<node*>(c->next);
+				delete_node(del_node);
+			}
+			connect_nodes(right_beg,right_end);
+			throw;
 		}
 		if (this_curr != this->end()) {
 			connect_nodes(curr, this_curr);
