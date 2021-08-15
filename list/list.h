@@ -107,6 +107,10 @@ class list {
 	requires std::predicate<Pred,T>
 	size_t remove_if(Pred pred);
 	void swap(list& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value);
+	void merge(list& other);
+	template <typename Pred>
+	requires std::predicate<Pred,T,T>
+	void merge(list& other, Pred pred);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -372,6 +376,36 @@ private:
 			}
 		}
 		return true;
+	}
+	template <typename Cmp>
+	void __merge(node* right_curr, base_node*& right_end,Cmp const& cmp) {
+		if (this->pre_head->next == right_curr) return;
+		node* this_curr = static_cast<node*>(this->pre_head->next);
+		base_node* curr = this->pre_head;
+		base_node* right_beg = right_curr->prev;
+		while (this_curr != this->end().itr_curr && right_curr != right_end) {
+			if (cmp(right_curr->val,this_curr->val)) {
+				connect_nodes(curr, right_curr);
+				curr = curr->next;
+				right_curr = static_cast<node*>(right_curr->next);
+			} else {
+				connect_nodes(curr, this_curr);
+				curr = curr->next;
+				this_curr = static_cast<node*>(this_curr->next);
+			}
+		}
+		if (this_curr != this->end()) {
+			connect_nodes(curr, this_curr);
+			connect_nodes(right_beg, right_end);
+		}
+		if (right_curr != right_end) {
+			connect_nodes(curr, right_curr);
+			connect_nodes(right_beg, this->aft_tail);
+			// swap end nodes
+			auto temp = this->aft_tail;
+			this->aft_tail = right_end;
+			right_end = temp;
+		}
 	}
 };// END CLASS LIST
 template <typename T, typename A>
