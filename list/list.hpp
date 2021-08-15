@@ -310,7 +310,8 @@ void list<T,Allocator>::emplace_back(Args && ...args) {
 }
 // resize provides a basic guarentee
 // TO DO: benchmark and compare difference between using curr to delete
-// or using pop_back() and push_back
+ // or using pop_back() and push_back
+
 template <typename T, typename Allocator>
 void list<T,Allocator>::resize(size_t new_size) {
 	__resize(new_size);
@@ -318,6 +319,27 @@ void list<T,Allocator>::resize(size_t new_size) {
 template <typename T, typename Allocator>
 void list<T,Allocator>::resize(size_t new_size, T const& val) {
 	__resize(new_size,val);
+}
+// algorithms
+template <typename T, typename Allocator>
+void list<T,Allocator>::sort() noexcept {
+	if (size() < 2) return;
+	base_node* a=pre_head->next,*b,*c;
+	base_node* new_end = a;
+	b = a->next;
+	c = b->next;
+
+	while (c != aft_tail) {
+		std::cout << static_cast<node*>(a)->val << ' ';
+		connect_nodes(b,a);
+		a = b;
+		b = c;
+		c = c->next;
+	}
+	std::cout << static_cast<node*>(b)->val << '\n';
+	connect_nodes(b,a);
+	connect_nodes(new_end,aft_tail);
+	connect_nodes(pre_head,b);
 }
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {

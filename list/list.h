@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <utility>
 #include <iostream> // DELETE ME: debugging
+#include <concepts>
 
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>>
@@ -52,6 +53,7 @@ class list {
 	node_allocator_t node_allocator;
 	using Traits = std::allocator_traits<node_allocator_t>;
 	Allocator value_allocator;
+
 	base_node* pre_head;	
 	base_node* aft_tail;
 	size_t n;
@@ -95,9 +97,11 @@ class list {
 	void emplace_front(Args && ...args);
 	template <typename ...Args>
 	void emplace_back(Args && ...args);
-	// FIX ME: work on making a template
+	// FIX ME: work on making a template or constraint
 	void resize(size_t new_size);
 	void resize(size_t new_size, T const& val);
+	// algorithms
+	void sort() noexcept;
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
