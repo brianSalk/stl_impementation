@@ -433,5 +433,15 @@ template <typename T, typename Allocator>
 void list<T,Allocator>::splice(const_iterator pos, list&& other, const_iterator first, const_iterator last) {
 	__splice(pos,std::forward<list>(other),first,last);
 }
+template <typename T, typename Allocator>
+size_t list<T,Allocator>::unique() {
+	return __unique([](T const& a, T const& b){return a == b;});
+}
 
+template <typename T, typename Allocator>
+template <typename Eq>
+requires std::predicate<Eq,T,T>
+size_t list<T,Allocator>::unique(Eq eq) {
+	return __unique(eq);
+}
 }// END OF NAMESPACE BRIAN

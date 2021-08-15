@@ -122,6 +122,10 @@ class list {
 	void splice(const_iterator pos, list& other, const_iterator first, const_iterator last);
 	
 	void splice(const_iterator pos, list&& other, const_iterator first, const_iterator last);
+	size_t unique();
+	template <typename Eq>
+	requires std::predicate<Eq,T,T>
+	size_t unique(Eq eq);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -376,18 +380,6 @@ private:
 		n -= count;
 		return count;
 	}
-	// friends/non-member functions
-	friend bool operator==(list const& lhs, list const& rhs) {
-		// if the lengths are not equal, return false
-		if (lhs.size() != rhs.size() ) return false;
-		// iterate through both lists and compare each element
-		for (auto lit = lhs.begin(), rit = rhs.begin(); lit != lhs.end();++lit,++rit) {
-			if (*lit != *rit) {
-				return false;
-			}
-		}
-		return true;
-	}
 	// must provide basic exception garentee if cmp throws an exception
 	template <typename Cmp>
 	void __merge(node* right_curr, base_node*& right_end,Cmp const& cmp) {
@@ -443,6 +435,41 @@ private:
 		connect_nodes(end_of_first, first.itr_curr);
 		connect_nodes(last.itr_curr->prev,front_of_second);
 		connect_nodes(pre_first,last.itr_curr);
+	}
+	template <typename Eq>
+	size_type __unique(Eq const& eq) {
+		node* curr = static_cast<node*>(pre_head->next);
+		node* next = static_cast<node*>(curr->next);
+		size_t count = 0;
+		while (next != end()) {
+			if (eq(curr->val,next->val)) {
+				while (next != end() && eq(curr->val,next->val)) {
+					auto del_node = next;	
+					next = static_cast<node*>(next->next);
+					delete_node(del_node);
+					++count;
+				}
+				connect_nodes(curr,next);
+			} 
+			curr = static_cast<node*>(curr->next);
+			next = (curr != end()) ? static_cast<node*>(curr->next) :
+			   	static_cast<node*>(end().itr_curr);
+		}
+		n -= count;
+		return count;
+	}
+
+	// friends/non-member functions
+	friend bool operator==(list const& lhs, list const& rhs) {
+		// if the lengths are not equal, return false
+		if (lhs.size() != rhs.size() ) return false;
+		// iterate through both lists and compare each element
+		for (auto lit = lhs.begin(), rit = rhs.begin(); lit != lhs.end();++lit,++rit) {
+			if (*lit != *rit) {
+				return false;
+			}
+		}
+		return true;
 	}
 };// END CLASS LIST
 template <typename T, typename A>
