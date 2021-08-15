@@ -351,5 +351,22 @@ list<T,Allocator>::~list() {
 		delete_node(del_node);
 	}
 }
+template <typename T, typename Allocator>
+size_t list<T,Allocator>::remove(T const& val) {
+	return __remove_if([&val](T const& a){return a == val;});
+}
+template <typename T, typename Allocator>
+template <typename Pred>  
+requires std::predicate<Pred,T>
+size_t list<T,Allocator>::remove_if(Pred pred) {
+	return __remove_if(pred);
+}
+template <typename T, typename Allocator>
+void list<T,Allocator>::swap(list const& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value) {
+	if (std::allocator_traits<Allocator>::propagate_on_container_swap::value) {
+		// is this an unqualified call to swap?
+			swap(*this,other);
+	}
+}
 
 }// END OF NAMESPACE BRIAN

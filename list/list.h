@@ -102,6 +102,11 @@ class list {
 	void resize(size_t new_size, T const& val);
 	// algorithms
 	void sort() noexcept;
+	size_t remove(T const& val);
+	template <typename Pred>
+	requires std::predicate<Pred,T>
+	size_t remove_if(Pred pred);
+	void swap(list const& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -325,6 +330,31 @@ private:
 			connect_nodes(aft_tail->prev, temp_head);
 			connect_nodes(curr,aft_tail);
 		}
+	}
+	template <typename Pred>
+	size_t __remove_if(Pred  const& pred) {
+		node* curr = static_cast<node*>(pre_head->next);
+		size_t count = 0;
+		while (curr != aft_tail) {
+			base_node* prev = curr->prev;
+			if (pred(curr->val)) {
+				while (pred(curr->val)) {
+					base_node* del_node = curr;
+					curr = static_cast<node*>(del_node->next);
+					delete_node(del_node);
+					++count;
+					if (curr == aft_tail) {
+						connect_nodes(prev,aft_tail);
+						n -= count;
+						return count;
+					}
+				}
+			connect_nodes(prev,curr);
+			}
+			curr = static_cast<node*>(curr->next);
+		}
+		n -= count;
+		return count;
 	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
