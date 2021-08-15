@@ -133,8 +133,6 @@ class list {
 		
 	
 	~list();
-	// list_iterator is the base class of reverse_iterator
-// that contains the code that is common to both forward and reverse iterator classes
 private:
 	template <bool Is_Const>
 	class list_iterator {
@@ -364,6 +362,17 @@ private:
 		return count;
 	}
 	// friends/non-member functions
+	friend bool operator==(list const& lhs, list const& rhs) {
+		// if the lengths are not equal, return false
+		if (lhs.size() != rhs.size() ) return false;
+		// iterate through both lists and compare each element
+		for (auto lit = lhs.begin(), rit = rhs.begin(); lit != lhs.end();++lit,++rit) {
+			if (*lit != *rit) {
+				return false;
+			}
+		}
+		return true;
+	}
 };// END CLASS LIST
 template <typename T, typename A>
 void swap(list<T,A>& lhs, list<T,A>&rhs) noexcept(noexcept(lhs.swap(rhs))) {
