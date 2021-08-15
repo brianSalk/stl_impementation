@@ -381,10 +381,22 @@ template <typename T, typename Allocator>
 void list<T,Allocator>::merge(list & other) {
 	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail, [](T const& a, T const& b){return a < b;});
 }
+
+template <typename T, typename Allocator>
+void list<T,Allocator>::merge(list && other) {
+	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail, [](T const& a, T const& b){return a < b;});
+}
 template <typename T, typename Allocator>
 template <typename Cmp>
 requires std::predicate<Cmp,T,T>
 void list<T,Allocator>::merge(list& other,Cmp cmp) {
+	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail,cmp);
+}
+
+template <typename T, typename Allocator>
+template <typename Cmp>
+requires std::predicate<Cmp,T,T>
+void list<T,Allocator>::merge(list&& other,Cmp cmp) {
 	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail,cmp);
 }
 

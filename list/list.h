@@ -108,9 +108,13 @@ class list {
 	size_t remove_if(Pred pred);
 	void swap(list& other) noexcept(std::allocator_traits<Allocator>::is_always_equal::value);
 	void merge(list& other);
+	void merge(list&& other);
 	template <typename Pred>
 	requires std::predicate<Pred,T,T>
 	void merge(list& other, Pred pred);
+	template <typename Pred>
+	requires std::predicate<Pred,T,T>
+	void merge(list&& other, Pred pred);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
