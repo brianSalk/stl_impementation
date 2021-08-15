@@ -100,6 +100,11 @@ class list {
 	// FIX ME: work on making a template or constraint
 	void resize(size_t new_size);
 	void resize(size_t new_size, T const& val);
+	// assign
+	void assign(size_t new_size, T const& val);
+	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
+	void assign(It beg, It end);
+	void assign(std::initializer_list<T> il);
 	// algorithms
 	void sort() noexcept;
 	size_t remove(T const& val);
@@ -442,15 +447,21 @@ private:
 		node* next = static_cast<node*>(curr->next);
 		size_t count = 0;
 		while (next != end()) {
-			if (eq(curr->val,next->val)) {
-				while (next != end() && eq(curr->val,next->val)) {
-					auto del_node = next;	
-					next = static_cast<node*>(next->next);
-					delete_node(del_node);
-					++count;
-				}
+			try {
+				if (eq(curr->val,next->val)) {
+					while (next != end() && eq(curr->val,next->val)) {
+						auto del_node = next;	
+						next = static_cast<node*>(next->next);
+						delete_node(del_node);
+						++count;
+					}
+					connect_nodes(curr,next);
+				} 
+			} catch (...) {
 				connect_nodes(curr,next);
-			} 
+				n -= count;
+				throw;
+			}
 			curr = static_cast<node*>(curr->next);
 			next = (curr != end()) ? static_cast<node*>(curr->next) :
 			   	static_cast<node*>(end().itr_curr);
@@ -477,4 +488,10 @@ void swap(list<T,A>& lhs, list<T,A>&rhs) noexcept(noexcept(lhs.swap(rhs))) {
 	lhs.swap(rhs);
 }
 }// END NAMESPACE BRIAN
+namespace std {
+template <typename T, typename A>
+void swap(brian::list<T,A>& lhs, brian::list<T,A>&rhs) noexcept(noexcept(lhs.swap(rhs))) {
+	lhs.swap(rhs);
+}
+}
 #include "list.hpp"

@@ -320,6 +320,29 @@ template <typename T, typename Allocator>
 void list<T,Allocator>::resize(size_t new_size, T const& val) {
 	__resize(new_size,val);
 }
+// assign
+template <typename T, typename Allocator>
+void list<T,Allocator>::assign(size_t new_size, T const& val) {
+	auto curr = pre_head;
+	size_t count = 0;
+	while (count < new_size && count++ < n) {
+		static_cast<node*>(curr->next)->val = val;
+		curr = curr->next;
+	}
+	while (count++ < new_size) {
+		curr->next = create_node(curr,val);
+		curr = curr->next;
+		n++;
+	}
+	auto temp = curr->next;	
+	while (temp != end()) {
+		auto del_node = temp;
+		temp = temp->next;
+		delete_node(del_node);
+	}
+	connect_nodes(curr,aft_tail);
+	
+}
 // algorithms
 template <typename T, typename Allocator>
 void list<T,Allocator>::sort() noexcept {
