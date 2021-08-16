@@ -365,11 +365,17 @@ void list<T,Allocator>::assign(It first, It last) {
 		base_node* temp_head = create_node(*first);
 		auto new_curr = temp_head;
 		++first;
-		while (first != last) {
-			new_curr->next = create_node(new_curr,*first);
-			new_curr = new_curr->next;
-			++first;
-			--n;
+		try {
+			while (first != last) {
+				new_curr->next = create_node(new_curr,*first);
+				new_curr = new_curr->next;
+				++first;
+				--n;
+			}
+		} catch (...) {
+			connect_nodes(curr->prev,temp_head);
+			connect_nodes(new_curr,aft_tail);
+			throw;
 		}
 		connect_nodes(curr->prev,temp_head);
 		connect_nodes(new_curr,aft_tail);
@@ -387,6 +393,121 @@ void list<T,Allocator>::assign(It first, It last) {
 		connect_nodes(curr,aft_tail);
 	}
 }
+template <typename T, typename Allocator>
+void list<T,Allocator>::assign(std::initializer_list<T> il) {
+	assign(il.begin(), il.end());
+}
+// assignment operators
+template <typename T, typename Allocator>
+typename list<T,Allocator>::list<T,Allocator> &
+list<T,Allocator>::operator=(list<T,Allocator> const& other) {
+	if (std::allocator_traits<Allocator>::propagate_on_container_copy_assignment::value) {
+		// if other.value_allocator does not equal this->value_allocator,
+		// then the old allocator needs to clear all memory in this,
+		// when allocators are unequal, that means that the allocators cannot deallocate eachothers memory
+		if (this->value_allocator != other.value_allocator) {
+			this->clear();
+			delete_node(pre_head);
+			delete_node(aft_tail);
+
+			value_allocator = other.value_allocator;
+			pre_head = new base_node();
+			aft_tail = new base_node();
+			pre_head->next = aft_tail;
+			aft_tail->prev = pre_head;
+			this->n = 0;
+		} else {
+			this->value_allocator = other.value_allocator;
+		}
+	}
+	// now it is guarenteed that the allocator can deallocate its own memory
+	// if this is not empty, reuse the nodes
+	base_node* curr = pre_head->next;	
+	base_node* other_curr = other.pre_head->next;
+	while (curr != this->aft_tail && other_curr != other.aft_tail) {
+		static_cast<node*>(curr)->val = static_cast<node*>(other_curr)->val;
+		curr = curr->next;
+		other_curr = other_curr->next;
+	}
+	// if the other list is longer, allocate new nodes
+	if (other_curr != other.aft_tail) {
+		auto temp_head = create_node(static_cast<node*>(other_curr)->val);
+		base_node* new_curr = temp_head;
+		other_curr = other_curr->next;
+		while (other_curr != other.aft_tail) {
+			new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
+			new_curr = new_curr->next;
+			other_curr = other_curr->next;
+		}
+		connect_nodes(curr->prev, temp_head);
+		connect_nodes(new_curr,this->aft_tail);
+	}
+	// if this is longer we need to delete nodes;
+	if (curr != this->aft_tail) {
+		auto end_node = curr->prev;
+		while (curr != this->aft_tail) {
+			auto del_node = curr;	
+			curr = curr->next;
+			delete_node(del_node);
+		}
+		connect_nodes(end_node,aft_tail);
+	} 
+	return *this;
+}
+template <typename T, typename Allocator>
+typename list<T,Allocator>::list<T,Allocator> &
+list<T,Allocator>::operator=(list<T,Allocator> && other) {
+	if (std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value) {
+		this->clear();
+	} else if (this->value_allocator != other.value_allocator) {
+		// QUESTION: is this correct? am I allowed to reuse nodes here?
+		// each element must be move-constructed
+		// also, try to refactor this so your code is less WET
+		base_node* curr = pre_head->next;	
+		base_node* other_curr = other.pre_head->next;
+		while (curr != this->aft_tail && other_curr != other.aft_tail) {
+			static_cast<node*>(curr)->val = std::move(static_cast<node*>(other_curr)->val);
+			curr = curr->next;
+			other_curr = other_curr->next;
+		}
+		// if the other list is longer, allocate new nodes
+		if (other_curr != other.aft_tail) {
+			auto temp_head = create_node(std::move(static_cast<node*>(other_curr)->val));
+			base_node* new_curr = temp_head;
+			other_curr = other_curr->next;
+			while (other_curr != other.aft_tail) {
+				new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
+				new_curr = new_curr->next;
+				other_curr = other_curr->next;
+			}
+			connect_nodes(curr->prev, temp_head);
+			connect_nodes(new_curr,this->aft_tail);
+		}
+		// if this is longer we need to delete nodes;
+		if (curr != this->aft_tail) {
+			auto end_node = curr->prev;
+			while (curr != this->aft_tail) {
+				auto del_node = curr;	
+				curr = curr->next;
+				delete_node(del_node);
+			}
+			connect_nodes(end_node,aft_tail);
+		} 
+		return *this;
+	}
+	this->value_allocator = other.value_allocator;
+	connect_nodes(this->pre_head,other.pre_head->next);
+	connect_nodes(other.aft_tail->prev, this->aft_tail);
+	connect_nodes(other.pre_head,other.aft_tail);
+	return *this;
+}
+template <typename T, typename Allocator>
+typename list<T,Allocator>::list<T,Allocator> &
+list<T,Allocator>::operator=(std::initializer_list<T> il) {
+	assign(il.begin(), il.end());
+	return *this;
+}
+
 // algorithms
 template <typename T, typename Allocator>
 void list<T,Allocator>::sort() noexcept {
@@ -511,4 +632,5 @@ requires std::predicate<Eq,T,T>
 size_t list<T,Allocator>::unique(Eq eq) {
 	return __unique(eq);
 }
+
 }// END OF NAMESPACE BRIAN

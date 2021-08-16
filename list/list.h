@@ -105,6 +105,10 @@ class list {
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	void assign(It beg, It end);
 	void assign(std::initializer_list<T> il);
+	// assignment operators
+	list& operator=(list const& other);
+	list& operator=(list && other);
+	list& operator=(std::initializer_list<T> il);
 	// algorithms
 	void sort() noexcept;
 	size_t remove(T const& val);
