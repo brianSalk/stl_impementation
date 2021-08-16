@@ -497,5 +497,16 @@ template <typename T, typename A>
 void swap(brian::list<T,A>& lhs, brian::list<T,A>&rhs) noexcept(noexcept(lhs.swap(rhs))) {
 	lhs.swap(rhs);
 }
+template <typename T, typename A, typename U>
+typename brian::list<T,A>::size_type
+erase(brian::list<T,A>& li, U const& val) {
+	return li.remove(val);
+}
+template <typename T, typename A, typename U>
+requires std::predicate<U,T>
+typename brian::list<T,A>::size_type
+erase_if(brian::list<T,A>& li, U pred) {
+	return li.remove_if(pred);
+}
 }
 #include "list.hpp"
