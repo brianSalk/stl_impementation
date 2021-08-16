@@ -487,10 +487,6 @@ private:
 		return true;
 	}
 };// END CLASS LIST
-template <typename T, typename A>
-void swap(list<T,A>& lhs, list<T,A>&rhs) noexcept(noexcept(lhs.swap(rhs))) {
-	lhs.swap(rhs);
-}
 }// END NAMESPACE BRIAN
 namespace std {
 template <typename T, typename A>
