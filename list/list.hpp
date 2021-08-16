@@ -349,7 +349,43 @@ void list<T,Allocator>::assign(size_t new_size, T const& val) {
 		delete_node(del_node);
 	}
 	connect_nodes(curr,aft_tail);
-	
+}
+// assign with iterators
+template <typename T, typename Allocator>
+template <typename It, typename std::iterator_traits<It>::pointer>
+void list<T,Allocator>::assign(It first, It last) {
+	// first try to reassign preexisting nodes
+	base_node* curr = pre_head->next;
+	while (first != last && curr != end()) {
+		static_cast<node*>(curr)->val = *first;
+		++first;
+		curr = curr->next;
+	}
+	if (first != last) {
+		base_node* temp_head = create_node(*first);
+		auto new_curr = temp_head;
+		++first;
+		while (first != last) {
+			new_curr->next = create_node(new_curr,*first);
+			new_curr = new_curr->next;
+			++first;
+			--n;
+		}
+		connect_nodes(curr->prev,temp_head);
+		connect_nodes(new_curr,aft_tail);
+		return;
+	}
+	if (curr != end()) {
+		auto new_curr = curr;
+		curr = curr->prev;
+		while (new_curr != end()) {
+			base_node* del_node = new_curr;	
+			new_curr = new_curr->next;
+			delete_node(del_node);
+			--n;
+		}
+		connect_nodes(curr,aft_tail);
+	}
 }
 // algorithms
 template <typename T, typename Allocator>
