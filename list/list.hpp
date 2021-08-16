@@ -42,7 +42,7 @@ list<T, Allocator>::list(size_type count, T const& val, Allocator const& alloc) 
 	connect_nodes(curr,aft_tail);
 	n = count;
 }
-// default fill construcotr
+// default fill constructor
 template <typename T, typename Allocator>
 list<T,Allocator>::list(size_t count, Allocator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
@@ -325,17 +325,25 @@ template <typename T, typename Allocator>
 void list<T,Allocator>::assign(size_t new_size, T const& val) {
 	auto curr = pre_head;
 	size_t count = 0;
-	while (count < new_size && count++ < n) {
-		static_cast<node*>(curr->next)->val = val;
-		curr = curr->next;
-	}
-	while (count++ < new_size) {
-		curr->next = create_node(curr,val);
-		curr = curr->next;
-		n++;
-	}
+	if (count < new_size) {
+		while (count < new_size && count < n) {
+			static_cast<node*>(curr->next)->val = val;
+			curr = curr->next;
+			++count;
+		}
+		try {
+			while (count++ < new_size) {
+				curr->next = create_node(curr,val);
+				curr = curr->next;
+				n++;
+			}
+		} catch (...) {
+			connect_nodes(curr,aft_tail);
+			throw;
+		}
+	} 
 	auto temp = curr->next;	
-	while (temp != end()) {
+	while (temp != nullptr) {
 		auto del_node = temp;
 		temp = temp->next;
 		delete_node(del_node);
