@@ -135,6 +135,10 @@ class list {
 	template <typename Eq>
 	requires std::predicate<Eq,T,T>
 	size_t unique(Eq eq);
+	void sort();
+	void template <typename Cmp>
+	requires std::predicate<Cmp,T,T>
+	void sort(Cmp cmp);
 	// observers
 	size_t size() const noexcept { return n; }
 	[[nodiscard]] bool empty() const noexcept { return begin() == end(); }
@@ -490,6 +494,8 @@ public:
 	// FIX ME: this needs to be optimized and I also need
 	// to improve my understanding of the spaceship operator
 	// and comparisons in general
+	// also, why do I still need to default operator==
+	// if I have the operator<=>?
 	friend auto operator<=>(list const& lhs,list const& rhs) {
 		auto l_it = lhs.begin(), r_it = rhs.begin();
 		for (; l_it != lhs.end() && r_it != rhs.end();++l_it,++r_it) {
