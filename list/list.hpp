@@ -431,13 +431,21 @@ list<T,Allocator>::operator=(list<T,Allocator> const& other) {
 	}
 	// if the other list is longer, allocate new nodes
 	if (other_curr != other.aft_tail) {
-		auto temp_head = create_node(static_cast<node*>(other_curr)->val);
-		base_node* new_curr = temp_head;
-		other_curr = other_curr->next;
-		while (other_curr != other.aft_tail) {
-			new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
-			new_curr = new_curr->next;
+		base_node* temp_head;
+		base_node* new_curr;
+		try {
+			temp_head = create_node(static_cast<node*>(other_curr)->val);
+			new_curr = temp_head;
 			other_curr = other_curr->next;
+			while (other_curr != other.aft_tail) {
+				new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
+				new_curr = new_curr->next;
+				other_curr = other_curr->next;
+			}
+		} catch (...) {
+			connect_nodes(curr->prev, temp_head);
+			connect_nodes(new_curr, this->aft_tail);
+			throw;
 		}
 		connect_nodes(curr->prev, temp_head);
 		connect_nodes(new_curr,this->aft_tail);
@@ -472,13 +480,21 @@ list<T,Allocator>::operator=(list<T,Allocator> && other) {
 		}
 		// if the other list is longer, allocate new nodes
 		if (other_curr != other.aft_tail) {
-			auto temp_head = create_node(std::move(static_cast<node*>(other_curr)->val));
-			base_node* new_curr = temp_head;
-			other_curr = other_curr->next;
-			while (other_curr != other.aft_tail) {
-				new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
-				new_curr = new_curr->next;
+			base_node* temp_head;
+			base_node* new_curr;
+			try {
+				temp_head = create_node(std::move(static_cast<node*>(other_curr)->val));
+				new_curr = temp_head;
 				other_curr = other_curr->next;
+				while (other_curr != other.aft_tail) {
+					new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
+					new_curr = new_curr->next;
+					other_curr = other_curr->next;
+				}
+			} catch (...) {
+				connect_nodes(curr->prev, temp_head);
+				connect_nodes(new_curr,this->aft_tail);
+				throw;
 			}
 			connect_nodes(curr->prev, temp_head);
 			connect_nodes(new_curr,this->aft_tail);
