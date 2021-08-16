@@ -474,7 +474,8 @@ private:
 		return count;
 	}
 
-	// friends/non-member functions
+public:
+	// friends/non-member functions and comparators
 	friend bool operator==(list const& lhs, list const& rhs) {
 		// if the lengths are not equal, return false
 		if (lhs.size() != rhs.size() ) return false;
@@ -485,6 +486,17 @@ private:
 			}
 		}
 		return true;
+	}
+	// FIX ME: this needs to be optimized and I also need
+	// to improve my understanding of the spaceship operator
+	// and comparisons in general
+	friend auto operator<=>(list const& lhs,list const& rhs) {
+		auto l_it = lhs.begin(), r_it = rhs.begin();
+		for (; l_it != lhs.end() && r_it != rhs.end();++l_it,++r_it) {
+			if (*l_it != *r_it) return *l_it <=> *r_it;
+		}
+		if (l_it == lhs.end() && r_it == rhs.end()) return 0 <=> 0;
+		else return (l_it == lhs.end()) ? 0 <=> 1 : 1 <=> 0;
 	}
 };// END CLASS LIST
 }// END NAMESPACE BRIAN
