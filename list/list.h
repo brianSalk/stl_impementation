@@ -110,7 +110,7 @@ class list {
 	list& operator=(list && other);
 	list& operator=(std::initializer_list<T> il);
 	// algorithms
-	void sort() noexcept;
+	void reverse() noexcept;
 	size_t remove(T const& val);
 	template <typename Pred>
 	requires std::predicate<Pred,T>
@@ -135,8 +135,8 @@ class list {
 	template <typename Eq>
 	requires std::predicate<Eq,T,T>
 	size_t unique(Eq eq);
-	void sort();
-	void template <typename Cmp>
+	void sort() noexcept;
+	template <typename Cmp>
 	requires std::predicate<Cmp,T,T>
 	void sort(Cmp cmp);
 	// observers
@@ -476,6 +476,90 @@ private:
 		}
 		n -= count;
 		return count;
+	}
+	base_node* __split(base_node* start, size_t len,base_node*& next_sublist) {
+		base_node* slow = start;
+		base_node* fast = start->next;
+		for (size_t i = 1; i < len && (fast->next || slow->next); ++i) {
+			if (fast->next != end()) {
+				fast = (fast->next->next != aft_tail) ? fast->next->next : fast->next;
+			}
+			if (slow->next != aft_tail) {
+				slow = slow->next;
+			}
+		}
+		base_node* mid = slow->next;
+		next_sublist = fast->next;
+		connect_nodes(slow,aft_tail);
+		connect_nodes(fast,aft_tail);
+		return mid;
+
+	}
+	template <typename Cmp>
+	base_node* __merge_nodes(base_node* list1, base_node* list2, base_node*& tail, Cmp const& less) {
+		base_node* l1 = list1, *l2 = list2;
+		base_node dummy_head;
+		base_node* new_tail = &dummy_head;
+		while (list1 != aft_tail && list2 != aft_tail) {
+			try {
+				if (less(static_cast<node*>(list1)->val, static_cast<node*>(list2)->val)) {
+					connect_nodes(new_tail,list1);
+					list1 = list1->next;
+					new_tail = new_tail->next;
+				} else {
+					connect_nodes(new_tail,list2);
+					list2 = list2->next;
+					new_tail = new_tail->next;
+				}
+			}
+			catch(...) {
+				// FIX ME: needs testing with throwing bipredicate
+				base_node* end_of_list1 = l1;
+				while (end_of_list1->next != aft_tail) {
+					end_of_list1 = end_of_list1->next;
+				}
+				base_node* end_of_list2 = l2;
+				while (end_of_list2 != aft_tail) {
+					end_of_list2 = end_of_list2->next;
+				}
+				connect_nodes(end_of_list1,l2);
+				end_of_list2 = tail;
+				clear();
+				throw;
+			}
+		}
+		if (list1 != aft_tail) connect_nodes(new_tail,list1);
+		else connect_nodes(new_tail,list2);
+		while (new_tail->next != aft_tail) new_tail = new_tail->next;
+		connect_nodes(tail,dummy_head.next);
+		tail = new_tail;
+		return dummy_head.next;
+	}
+	template <typename Cmp>
+	void __sort(Cmp const& cmp) {
+		base_node* tail;	
+		base_node* next_sublist;
+		if (size() < 2) return;
+		base_node* start = pre_head->next;
+		for (size_t size{1};size < n; size*=2) {
+			tail = pre_head;
+			while (start != aft_tail) {
+				// maybe this should be == aft_tail
+				if (start->next == aft_tail) {
+					connect_nodes(tail,start);
+					break;
+				}
+				base_node* mid = __split(start, size, next_sublist);
+				try {
+					__merge_nodes(start,mid,tail,cmp);
+				}
+				catch(...) {
+					start = pre_head->next;
+				}
+				start = next_sublist;
+			}
+			start = pre_head->next;
+		}
 	}
 
 public:

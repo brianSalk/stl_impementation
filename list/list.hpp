@@ -526,7 +526,8 @@ list<T,Allocator>::operator=(std::initializer_list<T> il) {
 
 // algorithms
 template <typename T, typename Allocator>
-void list<T,Allocator>::sort() noexcept {
+void list<T,Allocator>::reverse() noexcept {
+	std::cout << "rev\n";
 	if (size() < 2) return;
 	base_node* a=pre_head->next,*b,*c;
 	base_node* new_end = a;
@@ -647,6 +648,10 @@ template <typename Eq>
 requires std::predicate<Eq,T,T>
 size_t list<T,Allocator>::unique(Eq eq) {
 	return __unique(eq);
+}
+template <typename T, typename Allocator>
+void list<T, Allocator>::sort() noexcept {
+	__sort([](T const& a, T const& b){return a < b;});
 }
 
 }// END OF NAMESPACE BRIAN
