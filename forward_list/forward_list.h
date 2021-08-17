@@ -10,11 +10,8 @@
 #include <utility>
 #include <compare>
 #include <algorithm>
+#include "../my_concepts.h"
 namespace brian {
-	template <typename U>
-	concept __less_than_comparable = requires(U a, U b) {
-		{ a < b } -> std::convertible_to<bool>;
-	};
 template <typename T, typename Allocator = std::allocator<T>>
 class forward_list {
 	// forward declaration of list_iterator class template

@@ -480,7 +480,7 @@ private:
 	base_node* __split(base_node* start, size_t len,base_node*& next_sublist) {
 		base_node* slow = start;
 		base_node* fast = start->next;
-		for (size_t i = 1; i < len && (fast->next || slow->next); ++i) {
+		for (size_t i = 1; i < len && (fast->next != aft_tail || slow->next != aft_tail); ++i) {
 			if (fast->next != end()) {
 				fast = (fast->next->next != aft_tail) ? fast->next->next : fast->next;
 			}
@@ -490,8 +490,8 @@ private:
 		}
 		base_node* mid = slow->next;
 		next_sublist = fast->next;
-		connect_nodes(slow,aft_tail);
-		connect_nodes(fast,aft_tail);
+		slow->next = aft_tail;
+		fast->next = aft_tail;
 		return mid;
 
 	}
@@ -503,11 +503,11 @@ private:
 		while (list1 != aft_tail && list2 != aft_tail) {
 			try {
 				if (less(static_cast<node*>(list1)->val, static_cast<node*>(list2)->val)) {
-					connect_nodes(new_tail,list1);
+					new_tail->next = list1;
 					list1 = list1->next;
 					new_tail = new_tail->next;
 				} else {
-					connect_nodes(new_tail,list2);
+					new_tail->next = list2;
 					list2 = list2->next;
 					new_tail = new_tail->next;
 				}
@@ -522,16 +522,16 @@ private:
 				while (end_of_list2 != aft_tail) {
 					end_of_list2 = end_of_list2->next;
 				}
-				connect_nodes(end_of_list1,l2);
+				end_of_list1->next = l2;
 				end_of_list2 = tail;
 				clear();
 				throw;
 			}
 		}
-		if (list1 != aft_tail) connect_nodes(new_tail,list1);
-		else connect_nodes(new_tail,list2);
+		if (list1 != aft_tail) new_tail->next = list1;
+		else new_tail->next = list2;
 		while (new_tail->next != aft_tail) new_tail = new_tail->next;
-		connect_nodes(tail,dummy_head.next);
+		tail->next = dummy_head.next;
 		tail = new_tail;
 		return dummy_head.next;
 	}
@@ -546,7 +546,7 @@ private:
 			while (start != aft_tail) {
 				// maybe this should be == aft_tail
 				if (start->next == aft_tail) {
-					connect_nodes(tail,start);
+					tail->next = start;
 					break;
 				}
 				base_node* mid = __split(start, size, next_sublist);
@@ -561,7 +561,15 @@ private:
 			start = pre_head->next;
 		}
 	}
-
+	// used to connect prev after __sort
+	void __connect_back() noexcept {
+		base_node* curr = pre_head, * temp = pre_head->next;
+		while (temp != nullptr) {
+			temp->prev = curr;
+			curr = temp;
+			temp = temp->next;
+		}
+	}
 public:
 	// friends/non-member functions and comparators
 	friend bool operator==(list const& lhs, list const& rhs) {

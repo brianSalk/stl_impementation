@@ -4,5 +4,6 @@
 */main
 */.*
 .*
+!my_concepts.h
 */del_me
 */questions

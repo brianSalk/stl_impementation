@@ -652,6 +652,13 @@ size_t list<T,Allocator>::unique(Eq eq) {
 template <typename T, typename Allocator>
 void list<T, Allocator>::sort() noexcept {
 	__sort([](T const& a, T const& b){return a < b;});
+	__connect_back();
 }
-
+template <typename T, typename Allocator>
+template <typename Cmp>
+requires std::predicate<Cmp, T, T>
+void list<T,Allocator>::sort(Cmp cmp) {
+	__sort(cmp);
+	__connect_back();
+}
 }// END OF NAMESPACE BRIAN
