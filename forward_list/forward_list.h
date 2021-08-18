@@ -302,7 +302,7 @@ private:
 		return mid;
 	}
 	template <typename Cmp>
-	base_node* __merge_nodes(base_node* list1, base_node* list2,base_node*& tail, Cmp const& less) {
+	base_node* __merge_nodes(base_node* list1, base_node* list2,base_node*& tail, Cmp const& less, std::exception*& exe) {
 		base_node dummy_head;
 		base_node* new_tail = &dummy_head;
 		while (list1 && list2) {
@@ -317,13 +317,20 @@ private:
 					new_tail = new_tail->next;
 				}
 			}
-			catch (...) {
+			catch (std::exception& e) {
 				// if an exception is thrown the list will not
 				// be sorted, but it will remain in a valid state.
 				// also the exception will not be propogated to the client
 				new_tail->next = list1;
 				list1 = list1->next;
 				new_tail = new_tail->next;
+				exe = &e;
+			}
+			catch (...) {
+				new_tail->next = list1;
+				list1 = list1->next;
+				new_tail = new_tail->next;
+				exe = new std::exception();
 			}
 		}
 		if (list1) {
@@ -346,6 +353,7 @@ private:
 		if (pre_head->next == nullptr || pre_head->next->next == nullptr) {
 			return;
 		}
+		std::exception* exe = nullptr;
 		size_t n = __get_length();
 		base_node* start = pre_head->next;
 		for (size_t size{1}; size < n; size*=2) {
@@ -357,7 +365,7 @@ private:
 				}
 				base_node* mid = __split(start, size, next_sublist);
 				try { 
-					__merge_nodes(start,mid, tail, cmp);
+					__merge_nodes(start,mid, tail, cmp,exe);
 				}
 				catch (...) {
 					start = pre_head->next;
@@ -365,6 +373,9 @@ private:
 				start = next_sublist;
 			}
 			start = pre_head->next;
+		}
+		if (exe != nullptr) {
+			throw *exe;
 		}
 	}
 	// FIX ME:
