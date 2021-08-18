@@ -50,6 +50,7 @@ private:
 public:
 	// constructors
 	vector();
+	// observers
 	// destructor
 	~vector();
 }; // END CLASS VECTOR
