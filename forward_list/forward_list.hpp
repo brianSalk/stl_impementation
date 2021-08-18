@@ -226,6 +226,9 @@ namespace brian {
 		if (std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value) {
 			this->value_allocator = std::move(other.get_allocator());
 		}	
+		// alloc_a == alloc_b means that alloc_a can deallocate memory allocated
+		// by alloc_b.  This means that if alloc_a != alloc_b, we need to
+		// reallocate the memory with alloc_b so it can deallocate properly
 		if (this->value_allocator == other.get_allocator()) {
 		// now empty this
 		this->clear();
