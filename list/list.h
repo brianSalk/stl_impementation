@@ -481,7 +481,7 @@ private:
 		base_node* slow = start;
 		base_node* fast = start->next;
 		for (size_t i = 1; i < len && (fast->next != aft_tail || slow->next != aft_tail); ++i) {
-			if (fast->next != end()) {
+			if (fast->next != aft_tail) {
 				fast = (fast->next->next != aft_tail) ? fast->next->next : fast->next;
 			}
 			if (slow->next != aft_tail) {
@@ -497,7 +497,6 @@ private:
 	}
 	template <typename Cmp>
 	base_node* __merge_nodes(base_node* list1, base_node* list2, base_node*& tail, Cmp const& less) {
-		base_node* l1 = list1, *l2 = list2;
 		base_node dummy_head;
 		base_node* new_tail = &dummy_head;
 		while (list1 != aft_tail && list2 != aft_tail) {
@@ -514,17 +513,18 @@ private:
 			}
 			catch(...) {
 				// FIX ME: needs testing with throwing bipredicate
-				base_node* end_of_list1 = l1;
-				while (end_of_list1->next != aft_tail) {
-					end_of_list1 = end_of_list1->next;
+				while (list1 != aft_tail) {
+					new_tail->next = list1;
+					list1 = list1->next;
+					new_tail = new_tail->next;
 				}
-				base_node* end_of_list2 = l2;
-				while (end_of_list2 != aft_tail) {
-					end_of_list2 = end_of_list2->next;
+				while (list2 != aft_tail) {
+					new_tail->next = list2;
+					list2 = list2->next;
+					new_tail = new_tail->next;
 				}
-				end_of_list1->next = l2;
-				end_of_list2 = tail;
-				clear();
+				tail->next = dummy_head.next;
+				tail = new_tail;
 				throw;
 			}
 		}
@@ -544,7 +544,6 @@ private:
 		for (size_t size{1};size < n; size*=2) {
 			tail = pre_head;
 			while (start != aft_tail) {
-				// maybe this should be == aft_tail
 				if (start->next == aft_tail) {
 					tail->next = start;
 					break;
@@ -554,12 +553,14 @@ private:
 					__merge_nodes(start,mid,tail,cmp);
 				}
 				catch(...) {
-					start = pre_head->next;
+					tail->next = next_sublist;
+					throw;
 				}
 				start = next_sublist;
 			}
 			start = pre_head->next;
 		}
+		__connect_back();
 	}
 	// used to connect prev after __sort
 	void __connect_back() noexcept {
