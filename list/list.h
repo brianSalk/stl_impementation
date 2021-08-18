@@ -554,6 +554,7 @@ private:
 				}
 				catch(...) {
 					tail->next = next_sublist;
+					__connect_back();
 					throw;
 				}
 				start = next_sublist;
