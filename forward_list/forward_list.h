@@ -303,7 +303,7 @@ private:
 		return mid;
 	}
 	template <typename Cmp>
-	base_node* __merge_nodes(base_node* list1, base_node* list2,base_node*& tail, Cmp const& less, std::exception_ptr& exe) {
+	base_node* __merge_nodes(base_node* list1, base_node* list2,base_node*& tail, Cmp const& less) {
 		base_node dummy_head;
 		base_node* new_tail = &dummy_head;
 		while (list1 && list2) {
@@ -322,10 +322,19 @@ private:
 				// if an exception is thrown the list will not
 				// be sorted, but it will remain in a valid state.
 				// also the exception will not be propogated to the client
-				new_tail->next = list1;
-				list1 = list1->next;
-				new_tail = new_tail->next;
-				exe = std::current_exception();
+				while (list1) {
+					new_tail->next = list1;
+					list1 = list1->next;
+					new_tail = new_tail->next;
+				} 
+				while (list2) {
+					new_tail->next = list2;
+					list2 = list2->next;
+					new_tail = new_tail->next;
+				}
+				tail->next = dummy_head.next;
+				tail = new_tail;
+				throw;
 			}
 		}
 		if (list1) {
@@ -348,7 +357,6 @@ private:
 		if (pre_head->next == nullptr || pre_head->next->next == nullptr) {
 			return;
 		}
-		std::exception_ptr exe = nullptr;
 		size_t n = __get_length();
 		base_node* start = pre_head->next;
 		for (size_t size{1}; size < n; size*=2) {
@@ -360,17 +368,15 @@ private:
 				}
 				base_node* mid = __split(start, size, next_sublist);
 				try { 
-					__merge_nodes(start,mid, tail, cmp,exe);
+					__merge_nodes(start,mid, tail, cmp);
 				}
 				catch (...) {
-					start = pre_head->next;
+					tail->next = next_sublist;
+					throw;
 				}
 				start = next_sublist;
 			}
 			start = pre_head->next;
-		}
-		if (exe != nullptr) {
-			std::rethrow_exception(exe);
 		}
 	}
 	// FIX ME:
