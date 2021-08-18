@@ -67,7 +67,7 @@ public:
 	}
 	// constructors
 	forward_list();
-	explicit forward_list(Allocator const& alloc);
+	explicit forward_list(Allocator const&alloc);
 	// T must be DefaultInsertable in order to participate in this overload
 	explicit forward_list(size_type count, Allocator const& alloc = Allocator());
 	// t must be 
@@ -378,6 +378,7 @@ private:
 			}
 			start = pre_head->next;
 		}
+		std::cout << "sorted\n";
 	}
 	// FIX ME:
 	// make sure that this algo is still exception safe even if pred throws.

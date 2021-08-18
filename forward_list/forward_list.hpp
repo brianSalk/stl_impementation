@@ -97,7 +97,6 @@ namespace brian {
 	// copy constructor
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> const& other):forward_list() {
-		// FIX ME: Do I need to create a new node_allocator after this?
 		value_allocator = std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator()); 
 		base_node* curr = this->pre_head;
 		derived_node* other_curr = static_cast<derived_node*>(other.pre_head->next);
@@ -123,8 +122,8 @@ namespace brian {
 	}
 	// move constructor
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : forward_list() {
-		value_allocator = std::move(other.value_allocator);
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : value_allocator(std::move(other.value_allocator)) {
+		pre_head = new base_node();
 		pre_head->next = other.pre_head->next;
 		other.pre_head->next = nullptr;
 	}
@@ -137,6 +136,7 @@ namespace brian {
 			this->pre_head->next = other.pre_head->next;
 			other.pre_head->next = nullptr;
 		} else {
+			value_allocator = alloc;
 			base_node* this_curr = pre_head;
 			derived_node* other_curr = static_cast<derived_node*>(other.pre_head->next);
 			try {
