@@ -54,8 +54,10 @@ class list {
 	using Traits = std::allocator_traits<node_allocator_t>;
 	Allocator value_allocator;
 
-	base_node* pre_head;	
+	base_node PRE_HEAD;
+	base_node AFT_TAIL;	
 	base_node* aft_tail;
+	base_node* pre_head;
 	size_t n;
 	public:
 	// constructors
@@ -280,12 +282,12 @@ private:
 	iterator __insert(const_iterator const& pos, It& beg, It const&  end) {
 	// il.begin() and il.end() are equal if il is empty, so don't worry about reusing this for the std::initializer_list overload
 	if (beg == end) return iterator(pos.itr_curr);
-		base_node* temp_head = create_node(*beg);
-		base_node* curr = temp_head;
-		++n;
+	auto __beg = beg;
+	base_node* temp_head = create_node(*beg);
+	base_node* curr = temp_head;
 	try {
-		auto it = ++beg;
-		for (it = beg; it != end;++it) {
+		auto it = ++__beg;
+		for (it = __beg; it != end;++it) {
 			curr->next = create_node(curr,*it);
 			curr = curr->next;
 			++n;
@@ -294,11 +296,10 @@ private:
 		// time to clean up
 		base_node* del_node;
 		curr = temp_head;
-		while (curr != end().itr_curr) {
+		while (curr) {
 			del_node = curr;
 			curr = curr->next;
 			delete_node(del_node);
-			--n;
 		}
 		throw;
 	}

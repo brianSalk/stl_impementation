@@ -10,7 +10,7 @@ namespace brian {
 // constuctors
 // default constructor
 template <typename T, typename Allocator>
-list<T,Allocator>::list() : pre_head(new base_node()),aft_tail(new base_node()) {
+list<T,Allocator>::list() : pre_head(&PRE_HEAD),aft_tail(&AFT_TAIL) {
 	pre_head->next = aft_tail;
 	aft_tail->prev = pre_head;
 	n = 0;
@@ -31,12 +31,7 @@ list<T, Allocator>::list(size_type count, T const& val, Allocator const& alloc) 
 			curr = curr->next;
 		}
 	} catch (...) {
-		// connect aft_tail to make list complete
-		connect_nodes(curr,aft_tail);
-		clear();
-		delete_node(pre_head);
-		pre_head = nullptr;
-		delete_node(aft_tail);
+		curr->next = aft_tail;
 		throw;
 	}
 	connect_nodes(curr,aft_tail);
@@ -51,13 +46,10 @@ list<T,Allocator>::list(size_t count, Allocator const& alloc) : list(alloc) {
 			node* new_node = create_node(curr);
 			curr->next = new_node;
 			curr = curr->next;
+			std::cout << "loop\n";
 		}
 	} catch (...) {
-		connect_nodes(curr,aft_tail);
-		clear();
-		delete_node(pre_head);
-		pre_head = nullptr;
-		delete_node(aft_tail);
+		connect_nodes(curr, aft_tail);
 		throw;
 	}
 	connect_nodes(curr,aft_tail);
@@ -67,26 +59,13 @@ list<T,Allocator>::list(size_t count, Allocator const& alloc) : list(alloc) {
 template <typename T, typename Allocator>
 list<T, Allocator>::list(std::initializer_list<T> il, Allocator const& alloc) : list(alloc) {
 	auto beg = il.begin();
-	try {
-		__insert(begin(),beg, il.end());
-	} catch (...) {
-		delete_node(pre_head);
-		delete_node(aft_tail);
-		pre_head = nullptr;
-	}
+	__insert(begin(),beg, il.end());
 }
 // range constructor
 template <typename T, typename Allocator>
 template <typename It, typename std::iterator_traits<It>::pointer>
 list<T, Allocator>::list(It first, It last, Allocator const& alloc) :list(alloc) {
-	try {
-		__insert(iterator(begin()), first, last);
-	} catch (...) {
-		delete_node(pre_head);
-		delete_node(aft_tail);
-		pre_head=nullptr;
-		throw;
-	}
+	__insert(iterator(begin()), first, last);
 }
 // copy constructor
 template <typename T, typename Allocator>
@@ -145,7 +124,7 @@ void list<T,Allocator>::clear() noexcept {
 		curr = curr->next;
 		delete_node(del_node);
 	}
-	pre_head->next = aft_tail;
+	connect_nodes(pre_head,aft_tail);
 	n = 0;
 }
 // insert
@@ -549,13 +528,7 @@ void list<T,Allocator>::reverse() noexcept {
 }
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
-	base_node* curr = pre_head;
-	base_node* del_node;
-	while (curr) {
-		del_node = curr;
-		curr = curr->next;
-		delete_node(del_node);
-	}
+	clear();
 }
 template <typename T, typename Allocator>
 size_t list<T,Allocator>::remove(T const& val) {
