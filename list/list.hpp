@@ -26,7 +26,7 @@ list<T, Allocator>::list(size_type count, T const& val, Allocator const& alloc) 
 	base_node* curr = pre_head;
 	try {
 		for (size_t i{0};i < count; ++i) {
-			node* new_node = create_node(curr,val);
+			node* new_node = create_node_with_hint(curr,curr,val);
 			curr->next = new_node;
 			curr = curr->next;
 		}
@@ -43,7 +43,7 @@ list<T,Allocator>::list(size_t count, Allocator const& alloc) : list(alloc) {
 	base_node* curr = pre_head;
 	try {
 		for (size_t i{0};i < count; ++i) {
-			node* new_node = create_node(curr);
+			node* new_node = create_node_with_hint(curr,new_node,curr);
 			curr->next = new_node;
 			curr = curr->next;
 			std::cout << "loop\n";
@@ -91,24 +91,30 @@ list<T, Allocator>::list(list && other) :list() {
 // FIX ME: exception safety with move semantics is hard!
 template <typename T, typename Allocator>
 list<T, Allocator>::list(list && other, Allocator const& alloc) :list() {
-	if (alloc != other.get_allocator()) {
+	if (alloc == other.get_allocator()) {
 		this->value_allocator = std::move(other.value_allocator);
 		node* other_curr = static_cast<node*>(other.pre_head->next);	
 		base_node* this_curr = this->pre_head;
-		while (other_curr != other.end()) {
-			node* new_node = create_node(this_curr,std::move(other_curr->val));
-			this_curr->next = new_node;
-			this_curr = new_node;
-			other_curr = static_cast<node*>(other_curr->next);
+		try {
+			while (other_curr != other.end()) {
+				node* new_node = create_node_with_hint(this_curr,this_curr,std::move(other_curr->val));
+				this_curr->next = new_node;
+				this_curr = new_node;
+				other_curr = static_cast<node*>(other_curr->next);
+			}
+		} catch (...) {
+			connect_nodes(this_curr, this->aft_tail);
+			throw;
 		}
 		connect_nodes(this_curr,this->aft_tail);
 		this->n = other.n;
+	} else { 
+		this->value_allocator = std::move(other.value_allocator);
+		connect_nodes(this->pre_head,other.pre_head->next);
+		connect_nodes(other.aft_tail->prev,this->aft_tail);
+		this->n = other.n;
+		other.pre_head->next = other.aft_tail;
 	}
-	this->value_allocator = std::move(other.value_allocator);
-	connect_nodes(this->pre_head,other.pre_head->next);
-	connect_nodes(other.aft_tail->prev,this->aft_tail);
-	this->n = other.n;
-	other.pre_head->next = other.aft_tail;
 }
 // observers
 template <typename T, typename Allocator>

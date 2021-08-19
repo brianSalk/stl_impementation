@@ -237,6 +237,18 @@ private:
 		}
 		return new_node;
 	}
+	template <typename ...Args>
+	node* create_node_with_hint(base_node* hint,Args &&...args) {
+		node* new_node = Traits::allocate(node_allocator,1,static_cast<node*>(hint));
+		try {
+			Traits::construct(node_allocator,new_node,std::forward<Args>(args)...);
+		}
+		catch (...) {
+			Traits::deallocate(node_allocator,new_node,1);
+			throw;
+		}
+		return new_node;
+	}
 	void delete_node(base_node* del_node) {
 		Traits::destroy(node_allocator, static_cast<node*>(del_node));
 		Traits::deallocate(node_allocator, static_cast<node*>(del_node),1);
@@ -257,7 +269,7 @@ private:
 	try {
 		auto it = ++__beg;
 		for (it = __beg; it != end;++it) {
-			curr->next = create_node(curr,*it);
+			curr->next = create_node_with_hint(curr,curr,*it);
 			curr = curr->next;
 		}
 	} catch(...) {
@@ -288,7 +300,7 @@ private:
 	try {
 		auto it = ++__beg;
 		for (it = __beg; it != end;++it) {
-			curr->next = create_node(curr,*it);
+			curr->next = create_node_with_hint(curr,curr,*it);
 			curr = curr->next;
 			++n;
 		}
