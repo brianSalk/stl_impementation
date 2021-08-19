@@ -234,23 +234,25 @@ namespace brian {
 			// now we loop through other and move each element to this, allocating new
 			// memory as we go
 			base_node temp_head;
-			base_node* other_curr = &temp_head;
-			base_node* this_curr = this->before_begin().itr_curr;
+			base_node* other_curr = other.pre_head->next;
+			base_node* this_curr = &temp_head;
 			try {
 			while (other_curr != nullptr) {
 				derived_node* new_node = create_node(std::move(static_cast<derived_node*>(other_curr)->val));
-				this_curr->next = static_cast<base_node*>(new_node);
+				this_curr->next = new_node;
 				this_curr = this_curr->next;
 				other_curr = other_curr->next;
 			}
 			} catch (...) {
 				__clear(temp_head.next);
 				this_curr->next = nullptr;
+				return *this;
 				// 
 				// exception is not propagated to the client
 			}
 			this->clear();
 			this->pre_head->next = temp_head.next;
+			other.clear();
 			other.pre_head->next = nullptr;
 			return *this;
 		}
