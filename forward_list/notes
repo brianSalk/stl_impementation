@@ -1,0 +1,2 @@
+I learned that the destrcutor is automatically called if an exception is thrown in a constructor
+what are the consequences of using an allocator to  destroy/deallocate memory that was allocated with new?

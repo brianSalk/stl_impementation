@@ -54,6 +54,7 @@ private:
 	NodeAlloc_t node_allocator;
 	using Traits = typename std::allocator_traits<NodeAlloc_t>;
 	base_node* pre_head;
+	base_node __pre_head;
 public:
 	// DELETE ME: this method is for debugging only
 	void dump() const { 
@@ -205,6 +206,13 @@ private:
 
 	};
 	// helper methods
+	void __clear(base_node* curr) {
+		while (curr) {
+			base_node* del_node = curr;
+			curr = curr->next;
+			delete_node(del_node);
+		}
+	}
 	derived_node* create_default_node() {
 		derived_node* new_node = Traits::allocate(node_allocator,1);
 		try {

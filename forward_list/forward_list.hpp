@@ -15,7 +15,7 @@ namespace brian {
 	// constructors
 	template<typename T, typename Allocator>
 	forward_list<T,Allocator>::forward_list() {
-		pre_head = new base_node();
+		pre_head = &__pre_head;
 	}
 	template<typename T, typename Allocator>
 	forward_list<T,Allocator>::forward_list(Allocator const& alloc) :forward_list() {
@@ -33,9 +33,6 @@ namespace brian {
 			}
 		}
 		catch(...) {
-			clear();
-			delete_node(pre_head);
-			pre_head = nullptr;
 			throw;
 		}
 	}
@@ -51,8 +48,6 @@ namespace brian {
 			}
 		}
 		catch (...) {
-			std::cerr << "call to constructor unsuccessful\n";
-			delete_node(pre_head);
 			throw;
 		}
 	}
@@ -63,16 +58,12 @@ namespace brian {
 		derived_node* new_node = nullptr;
 		try {
 			for (size_t i {0}; i < count; ++i) {
-				//new_node = create_node(value);
-				new_node = Traits::allocate(node_allocator,1);
-				Traits::construct(node_allocator,new_node,value);
+				new_node = create_node(value);
 				curr->next = static_cast<base_node*>(new_node);
 				curr = curr->next;
 			}
 		}
 		catch (...) {
-			clear();
-			delete_node(pre_head);
 			throw;
 		}
 	}
@@ -89,8 +80,6 @@ namespace brian {
 			}
 		}
 		catch (...) {
-			clear();
-			delete_node(pre_head);
 			throw;
 		}
 	}
@@ -110,20 +99,22 @@ namespace brian {
 			}
 		}
 		catch(...) {
-			clear();
-			delete_node(pre_head);
 			throw;
 		}
 	}
 	// allocator extended copy constructor
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> const& other, Allocator const& alloc) : forward_list(other){
-		value_allocator = alloc;
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> const& other, Allocator const& alloc) : forward_list(other.value_allocator) {
+		base_node* curr = pre_head;
+		// FIX ME? this could be optimized slightly if I dont use iterators.
+		for (auto const& each : other) {
+			curr->next = create_node(each);
+			curr = curr->next;
+		}
 	}
 	// move constructor
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : value_allocator(std::move(other.value_allocator)) {
-		pre_head = new base_node();
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : value_allocator(std::move(other.value_allocator)), pre_head(&__pre_head){
 		pre_head->next = other.pre_head->next;
 		other.pre_head->next = nullptr;
 	}
@@ -240,10 +231,10 @@ namespace brian {
 		}
 		else {
 			// if we got here we ARE NOT propagating the other allocator, so just use the old one
-			// first we clear this
-			this->clear();
-			// now we loop through other and move each element to this
-			base_node* other_curr = other.begin().itr_curr;
+			// now we loop through other and move each element to this, allocating new
+			// memory as we go
+			base_node temp_head;
+			base_node* other_curr = &temp_head;
 			base_node* this_curr = this->before_begin().itr_curr;
 			try {
 			while (other_curr != nullptr) {
@@ -253,9 +244,13 @@ namespace brian {
 				other_curr = other_curr->next;
 			}
 			} catch (...) {
+				__clear(temp_head.next);
 				this_curr->next = nullptr;
-				throw;
+				// 
+				// exception is not propagated to the client
 			}
+			this->clear();
+			this->pre_head->next = temp_head.next;
 			other.pre_head->next = nullptr;
 			return *this;
 		}
@@ -530,23 +525,14 @@ namespace brian {
 	}
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::~forward_list() {
-		base_node* curr = pre_head;
-		base_node* temp = curr;
-		while (curr) {
-			temp = curr;
-			curr = curr->next;
-			delete_node(temp);
-		}
+		clear();
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {
-		// there should never be a situation where a list has a null pre_head
-		// uncomment line below to debug for null pre_head
-		//if (pre_head == nullptr) {std::cout << "FIX ME, pre_head is null\n";return;}
 		base_node* curr = pre_head->next;
 		base_node* temp  = curr;
 		try {
-			while (curr != nullptr) {
+			while (curr) {
 				temp = curr;
 				curr = curr->next;
 				delete_node(temp);
