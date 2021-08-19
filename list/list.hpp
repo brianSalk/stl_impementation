@@ -91,7 +91,7 @@ list<T, Allocator>::list(list && other) :list() {
 // FIX ME: exception safety with move semantics is hard!
 template <typename T, typename Allocator>
 list<T, Allocator>::list(list && other, Allocator const& alloc) :list() {
-	if (alloc == other.get_allocator()) {
+	if (alloc != other.get_allocator()) {
 		this->value_allocator = std::move(other.value_allocator);
 		node* other_curr = static_cast<node*>(other.pre_head->next);	
 		base_node* this_curr = this->pre_head;
