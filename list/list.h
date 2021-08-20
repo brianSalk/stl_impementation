@@ -239,6 +239,7 @@ private:
 	}
 	template <typename ...Args>
 	node* create_node_with_hint(base_node* hint,Args &&...args) {
+		std::cout << "hint is " << static_cast<node*>(hint)->val << '\n';
 		node* new_node = Traits::allocate(node_allocator,1,static_cast<node*>(hint));
 		try {
 			Traits::construct(node_allocator,new_node,std::forward<Args>(args)...);
