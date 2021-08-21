@@ -92,10 +92,26 @@ public:
 	constexpr explicit vector(Allocator const& alloc) noexcept;
 	constexpr vector(size_t,T const&, Allocator const& alloc = Allocator());
 	constexpr explicit vector(size_t count, Allocator const& alloc = Allocator());
+	constexpr vector(vector const& other);
+	constexpr vector(vector const& other, Allocator const& alloc);
+	constexpr vector(vector && other) noexcept;
+	constexpr vector(vector && other, Allocator const& alloc);
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	constexpr vector(It,It);
 	vector(std::initializer_list<T> il);
 	// observers
+	constexpr Allocator get_allocator() const noexcept { return allocator; }
+	constexpr size_t size() const noexcept { return n; }
+	constexpr reference operator[](size_t pos) { return arr[pos]; }
+	constexpr const_reference operator[](size_t pos) const { return arr[pos]; }
+	constexpr reference front() { return arr[0]; }
+	constexpr const_reference front() const { return arr[0]; }
+	constexpr reference back() { return arr[n-1]; }
+	constexpr const_reference back() const { return arr[n-1]; }
+	constexpr reference at(size_t pos) { return (pos<n) ? arr[pos] : throw std::out_of_range("at attempted to access element not in range"); }
+	constexpr const_reference at(size_t pos) const { return at(pos); }
+
+
 	iterator 				begin() { return iterator(arr); }
 	const_iterator          begin() const { return const_iterator(arr); }
 	const_iterator          cbegin() const { return const_iterator(arr); }
@@ -115,16 +131,13 @@ private:
 	// helpers
 	vector(Allocator const& alloc,size_t s,size_t c) : n(s), capacity(c), arr(Traits::allocate(allocator,c)), allocator(alloc) {}
 	template <typename It>
-	requires at_least_random_access_iterator<It>  
-	iterator __insert(const_iterator pos, It first, It last) {
-		std::cout << "is random access iterator";
-		return iterator(nullptr);
-	}
-	template <typename It>
-	requires at_most_bidirectional_iterator<It>  
-	iterator __insert(const_iterator pos, It first, It last) {
-		std::cout << "is NOT random access iterator";
-		return iterator(nullptr);
+	iterator __insert(It first, It last, T* ptr, size_t offset) {
+		size_t i = 0;
+		for (auto it = first; it != last; ++it) {
+			Traits::construct(allocator, arr + i + offset, *it);
+			++i;
+		}
+		return iterator(ptr + offset);
 	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN
