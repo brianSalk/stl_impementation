@@ -7,8 +7,10 @@
 namespace brian {
 	template <typename T, typename Allocator>
 	constexpr vector<T,Allocator>::vector() noexcept(noexcept(Allocator())) : vector(Allocator(),0,1) {}
+	// allocator constructor
 	template <typename T, typename Allocator>
 	constexpr vector<T,Allocator>::vector(Allocator const& alloc) noexcept : vector(alloc,0,1) {}
+	// fill constructor
 	template <typename T, typename Allocator>
 	constexpr vector<T,Allocator>::
 	vector(size_t count, T const& val, Allocator const& alloc) : vector(alloc,count,count){
@@ -16,14 +18,19 @@ namespace brian {
 			Traits::construct(allocator,arr+i,val);
 		}
 	}
+	// default fill constructor
 	template <typename T, typename Allocator>
 	constexpr vector<T,Allocator>::vector(size_t count, Allocator const& alloc) : vector(alloc,count,count) { for (size_t i{0};i<count;++i)Traits::construct(allocator,arr); }
+	// range constructor
 	template <typename T, typename Allocator>
 	template <typename It, typename std::iterator_traits<It>::pointer>
-	constexpr vector<T,Allocator>::vector(It first, It last) {
+	constexpr vector<T,Allocator>::vector(It first, It last) : vector()	{
 		// insert overload just like list, one overload is for contiguous/random
 		// access the other for forward/bidirectional	
+		std::cout << "lhe\n";
+		__insert(begin(),first,last);
 	}
+	// initializer list constructor
 	template <typename T, typename Allocator>
 	vector<T, Allocator>::vector(std::initializer_list<T> il) {
 		n = il.size();	

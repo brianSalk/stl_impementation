@@ -5,6 +5,8 @@
 #include <iterator>
 #include <memory>
 #include <type_traits>
+#include <concepts>
+#include "../my_concepts.h"
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>> 
 class vector {
@@ -44,8 +46,8 @@ private:
 		vector_iterator() = default;
 		vector_iterator(pointer i) : itr_p(i) {}
 		vector_iterator(vector_iterator const& it) = default;
-		template <bool Was_Const, typename std::enable_if<Is_Const || !Was_Const>::type>
-		vector_iterator(vector_iterator const& it) : itr_p(it.itr_p) {}
+		template <bool Was_Const, typename = std::enable_if<Is_Const || !Was_Const>::type>
+		vector_iterator(vector_iterator<Was_Const> const& it) : itr_p(it.itr_p) {}
 
 		vector_iterator operator++() {
 			return vector_iterator(++itr_p);
@@ -111,7 +113,19 @@ public:
 	~vector();
 private:
 	// helpers
-	vector(Allocator const& alloc,size_t s,size_t c) : n(s), capacity(c), arr(Traits::allocate(allocator,arr,c)), allocator(alloc) {}
+	vector(Allocator const& alloc,size_t s,size_t c) : n(s), capacity(c), arr(Traits::allocate(allocator,c)), allocator(alloc) {}
+	template <typename It>
+	requires at_least_random_access_iterator<It>  
+	iterator __insert(const_iterator pos, It first, It last) {
+		std::cout << "is random access iterator";
+		return iterator(nullptr);
+	}
+	template <typename It>
+	requires at_most_bidirectional_iterator<It>  
+	iterator __insert(const_iterator pos, It first, It last) {
+		std::cout << "is NOT random access iterator";
+		return iterator(nullptr);
+	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN
 #include "vector.hpp"
