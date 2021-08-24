@@ -27,7 +27,7 @@ namespace brian {
 	template <typename It, typename std::iterator_traits<It>::pointer>
 	constexpr vector<T,Allocator>::vector(It first, It last) {
 		n = std::distance(first,last);
-		capacity = n;
+		cpt = n;
 		arr = Traits::allocate(allocator,n);
 		// insert overload just like list, one overload is for contiguous/random
 		// access the other for forward/bidirectional	
@@ -36,14 +36,14 @@ namespace brian {
 	}
 	// copy constructor
 	template <typename T, typename Allocator>
-	constexpr vector<T,Allocator>::vector(vector const& other) : vector(Traits::select_on_container_copy_construction(other.get_allocator()),other.capacity(), other.size())  {
+	constexpr vector<T,Allocator>::vector(vector const& other) : vector(Traits::select_on_container_copy_construction(other.get_allocator()),other.cpt(), other.size())  {
 		for (size_t i{0}; i < n; ++i) {
 			Traits::construct(allocator,arr + i, other.arr);
 		}
 	}
 	// allocator extended copy constructor
 	template <typename T, typename Allocator>
-	constexpr vector<T,Allocator>::vector(vector const& other, Allocator const& alloc) : vector(alloc,other.size(),other.capacity()) {
+	constexpr vector<T,Allocator>::vector(vector const& other, Allocator const& alloc) : vector(alloc,other.size(),other.cpt()) {
 		for (size_t i{0}; i < n; ++i) {
 			Traits::construct(allocator,arr + i, other.arr);
 		}
@@ -53,9 +53,9 @@ namespace brian {
 	constexpr vector<T,Allocator>::vector(vector && other) noexcept {
 		this->arr = other.arr;
 		this->n = other.n;
-		this->capacity = other.capacity;
+		this->cpt = other.cpt;
 		other.n = 0;
-		other.capacity = 1;
+		other.cpt = 1;
 		other.arr = Traits::allocate(allocator,1);
 	}
 	// move constructor allocator extended
@@ -64,15 +64,15 @@ namespace brian {
 		if (allocator == alloc) {
 			this->arr = other.arr;
 			this->n = other.n;
-			this->capacity = other.capacity;
+			this->cpt = other.cpt;
 			other.n = 0;
-			other.capacity = 1;
+			other.cpt = 1;
 			other.arr = Traits::allocate(allocator,1);
 		} else {
 			this->allocator = alloc;
 			this->n = other.n;
-			this->capacity = other.capacity;
-			this->arr = Traits::allocate(this->allocator,this->capacity);
+			this->cpt = other.cpt;
+			this->arr = Traits::allocate(this->allocator,this->cpt);
 			for (size_t i{0}; i < this->n; ++i) {
 				Traits::construct(allocator,arr + i,std::move(other.arr[i]));
 			}
@@ -82,7 +82,7 @@ namespace brian {
 	template <typename T, typename Allocator>
 	vector<T, Allocator>::vector(std::initializer_list<T> il) {
 		n = il.size();	
-		capacity = n;
+		cpt = n;
 		arr = Traits::allocate(allocator,n);
 		size_t i = 0;
 		for (auto const& each : il) {
@@ -92,6 +92,21 @@ namespace brian {
 	template <typename T, typename Allocator>
 	vector<T,Allocator>::~vector() {
 		Traits::destroy(allocator,arr);
-		Traits::deallocate(allocator,arr,capacity);
+		Traits::deallocate(allocator,arr,cpt);
+	}
+	/*mutators*/
+	template <typename T, typename Allocator>
+	constexpr void vector<T,Allocator>::push_back(T const& val) {
+		if (n == cpt) {
+			__grow();
+		}
+		arr[n++] = val;
+	}
+	template <typename T, typename Allocator>
+	constexpr void vector<T,Allocator>::push_back(T && val) {
+		if (n == cpt) {
+			__grow();
+		}
+		arr[n++] = std::move(val);
 	}
 }

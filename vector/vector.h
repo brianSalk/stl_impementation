@@ -30,7 +30,7 @@ private:
 	pointer arr;
 	allocator_type allocator;
 	using Traits = std::allocator_traits<allocator_type>;
-	size_type capacity;
+	size_type cpt;
 	size_type n;
 	// TO DO: change the constructors so they accept a pointer to arr instead of size_t
 	template <bool Is_Const>
@@ -102,6 +102,7 @@ public:
 	// observers
 	constexpr Allocator get_allocator() const noexcept { return allocator; }
 	constexpr size_t size() const noexcept { return n; }
+	constexpr size_t capacity() const noexcept { return cpt; }
 	constexpr reference operator[](size_t pos) { return arr[pos]; }
 	constexpr const_reference operator[](size_t pos) const { return arr[pos]; }
 	constexpr reference front() { return arr[0]; }
@@ -126,10 +127,13 @@ public:
 	const_reverse_iterator  rend() { return const_reverse_iterator(arr); }
 	reverse_iterator 		rend() const { return const_reverse_iterator(arr); }
 	// destructor
+	/*mutators	*/
+	constexpr void push_back(T const& val);
+	constexpr void push_back(T && val);
 	~vector();
 private:
 	// helpers
-	vector(Allocator const& alloc,size_t s,size_t c) : n(s), capacity(c), arr(Traits::allocate(allocator,c)), allocator(alloc) {}
+	vector(Allocator const& alloc,size_t s,size_t c) : n(s), cpt(c), arr(Traits::allocate(allocator,c)), allocator(alloc) {}
 	template <typename It>
 	iterator __insert(It first, It last, T* ptr, size_t offset) {
 		size_t i = 0;
@@ -138,6 +142,20 @@ private:
 			++i;
 		}
 		return iterator(ptr + offset);
+	}
+	void __grow() {
+		size_t new_capacity = cpt * 2;
+		pointer new_arr = Traits::allocate(allocator,new_capacity,arr);
+		for (size_t i{0}; i < n; ++i) {
+			Traits::construct(allocator, new_arr + i,arr[i]);
+		}
+		// TO DO: should I loop to cpt or to n?
+		for (size_t i{0}; i < cpt; ++i) {
+			Traits::destroy(allocator,arr+i); 
+		}
+		Traits::deallocate(allocator,arr,cpt);
+		arr = new_arr;
+		cpt = new_capacity;
 	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN
