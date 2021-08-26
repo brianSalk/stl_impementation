@@ -179,7 +179,7 @@ private:
 		cpt = new_capacity;
 	}
 	template <typename ...Args>
-	iterator __insert_or_emplace(const_iterator const& pos, Args &&...args) {
+	iterator __insert_or_emplace_one(const_iterator const& pos, Args &&...args) {
 	size_t i{0};
 	if (n == cpt) {
 		size_t new_cpt = cpt*2;
