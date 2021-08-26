@@ -3,6 +3,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <memory>
+#include <utility>
 // constructors
 // default constructor
 namespace brian {
@@ -107,6 +108,55 @@ namespace brian {
 		if (n == cpt) {
 			__grow();
 		}
+		// TO DO: should I use Traits::construct?
 		arr[n++] = std::move(val);
 	}
+template<typename T,typename Allocator>   
+template <typename ...Args>
+constexpr T& vector<T,Allocator>::emplace_back(Args &&... args) {
+	if (n == cpt) { __grow(); }	
+	Traits::construct(allocator, arr + n, std::forward<Args>(args)...);
+	return arr[n++];
+}
+template<typename T, typename Allocator> 
+constexpr void vector<T,Allocator>::pop_back() {
+		Traits::destroy(allocator, arr + --n);
+}
+
+template<typename T, typename Allocator> 
+constexpr void vector<T,Allocator>::clear() noexcept {
+	for (size_t i{0}; i < n; ++i) {
+		Traits::destroy(allocator, arr+i);
+	}
+	n = 0;
+}
+template<typename T, typename Allocator> 
+template <typename ...Args>
+constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::emplace(const_iterator pos, Args &&...args) {
+	size_t i{0};
+	if (n == cpt) {
+		size_t new_cpt = cpt*2;
+		T* new_arr = Traits::allocate(allocator,new_cpt,arr);
+		// stop i when it is at pos
+		for (; arr + i != pos.itr_p;++i) {
+			Traits::construct(allocator, new_arr + i, std::move_if_noexcept(arr[i]));
+		}
+		for (size_t j{n};arr + i != arr + j;--j) {
+			new_arr[j] = std::move_if_noexcept(arr[j-1]);
+		}
+		for (size_t i{0}; i < n; ++i) {
+			Traits::destroy(allocator, arr + i);
+		}
+		Traits::deallocate(allocator,arr,cpt);
+		arr = new_arr;
+		cpt = new_cpt;
+	} else {
+		for(i=n+1;arr+i != pos;--i) {
+			arr[i] = std::move_if_noexcept(arr[i-1]);
+		}	
+	}
+	Traits::construct(allocator,arr+i,std::forward<Args>(args)...);
+	++n;
+	return iterator(arr);
+}
 }

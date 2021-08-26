@@ -6,11 +6,12 @@
 #include <memory>
 #include <type_traits>
 #include <concepts>
+#include <utility>
 #include "../my_concepts.h"
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>> 
 class vector {
-	// forward declaration of iterators
+	// forward declaration of terators
 	template <bool Is_Const>
 	class vector_iterator;
 public:
@@ -130,6 +131,12 @@ public:
 	/*mutators	*/
 	constexpr void push_back(T const& val);
 	constexpr void push_back(T && val);
+	template <typename ...Args>
+	constexpr T& emplace_back(Args &&... args);
+	constexpr void pop_back();
+	constexpr void clear() noexcept;
+	template <typename ...Args>
+	constexpr iterator emplace(const_iterator pos, Args &&...args);
 	~vector();
 private:
 	// helpers
@@ -146,11 +153,23 @@ private:
 	void __grow() {
 		size_t new_capacity = cpt * 2;
 		pointer new_arr = Traits::allocate(allocator,new_capacity,arr);
-		for (size_t i{0}; i < n; ++i) {
-			Traits::construct(allocator, new_arr + i,arr[i]);
+		size_t i{0};
+		try {
+			for (; i < n; ++i) {
+				Traits::construct(allocator, new_arr + i,std::move_if_noexcept(arr[i]));
+			}
+			// I might need to do something different here if
+			// T was moved vs if T was copied
+		} catch(...) {
+			// if construction fails, clean up
+			for (size_t j{0}; j < i; ++j) {
+				Traits::destroy(allocator, new_arr+j);
+			}
+			Traits::deallocate(allocator, new_arr, new_capacity);
+			throw;
 		}
 		// TO DO: should I loop to cpt or to n?
-		for (size_t i{0}; i < cpt; ++i) {
+		for (size_t i{0}; i < n; ++i) {
 			Traits::destroy(allocator,arr+i); 
 		}
 		Traits::deallocate(allocator,arr,cpt);
