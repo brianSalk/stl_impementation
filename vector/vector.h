@@ -137,6 +137,8 @@ public:
 	constexpr void clear() noexcept;
 	template <typename ...Args>
 	constexpr iterator emplace(const_iterator pos, Args &&...args);
+	/*insert*/
+	constexpr iterator insert(iterator pos, T const& val);
 	~vector();
 private:
 	// helpers
@@ -175,6 +177,33 @@ private:
 		Traits::deallocate(allocator,arr,cpt);
 		arr = new_arr;
 		cpt = new_capacity;
+	}
+	template <typename ...Args>
+	iterator __insert_or_emplace(const_iterator const& pos, Args &&...args) {
+	size_t i{0};
+	if (n == cpt) {
+		size_t new_cpt = cpt*2;
+		T* new_arr = Traits::allocate(allocator,new_cpt,arr);
+		for (; arr + i != pos.itr_p;++i) {
+			Traits::construct(allocator, new_arr + i, std::move_if_noexcept(arr[i]));
+		}
+		for (size_t j{n};arr + i != arr + j;--j) {
+			new_arr[j] = std::move_if_noexcept(arr[j-1]);
+		}
+		for (size_t i{0}; i < n; ++i) {
+			Traits::destroy(allocator, arr + i);
+		}
+		Traits::deallocate(allocator,arr,cpt);
+		arr = new_arr;
+		cpt = new_cpt;
+	} else {
+		for(i=n;arr+i != pos;--i) {
+			arr[i] = std::move_if_noexcept(arr[i-1]);
+		}
+	}
+	Traits::construct(allocator,arr+i,std::forward<Args>(args)...);
+	++n;
+	return iterator(arr + i);
 	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN

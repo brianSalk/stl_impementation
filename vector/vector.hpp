@@ -137,7 +137,6 @@ constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::emplace(co
 	if (n == cpt) {
 		size_t new_cpt = cpt*2;
 		T* new_arr = Traits::allocate(allocator,new_cpt,arr);
-		// stop i when it is at pos
 		for (; arr + i != pos.itr_p;++i) {
 			Traits::construct(allocator, new_arr + i, std::move_if_noexcept(arr[i]));
 		}
@@ -151,12 +150,16 @@ constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::emplace(co
 		arr = new_arr;
 		cpt = new_cpt;
 	} else {
-		for(i=n+1;arr+i != pos;--i) {
+		for(i=n;arr+i != pos;--i) {
 			arr[i] = std::move_if_noexcept(arr[i-1]);
-		}	
+		}
 	}
 	Traits::construct(allocator,arr+i,std::forward<Args>(args)...);
 	++n;
-	return iterator(arr);
+	return iterator(arr + i);
 }
+template<typename T, typename Allocator> 
+	constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(iterator pos, T const& val) {
+		
+	}
 }

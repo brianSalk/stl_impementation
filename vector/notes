@@ -1,0 +1,1 @@
+vector iterators can often be invalidated, when testing, to not reuse iterators after modifying operations.
