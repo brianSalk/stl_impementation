@@ -72,7 +72,7 @@ private:
 			return it.itr_p -= n;
 		}
 		friend vector_iterator operator +(vector_iterator const& it, size_t n) {
-			return it.itr_p + n;
+			return vector_iterator(it.itr_p + n);
 		}
 		friend vector_iterator operator -(vector_iterator const& it, size_t n) {
 			return it.itr_p - n;
@@ -138,7 +138,9 @@ public:
 	template <typename ...Args>
 	constexpr iterator emplace(const_iterator pos, Args &&...args);
 	/*insert*/
-	constexpr iterator insert(iterator pos, T const& val);
+	constexpr iterator insert(const_iterator pos, T const& val);
+	constexpr iterator insert(const_iterator pos, T && val);
+	constexpr iterator insert(const_iterator pos, size_t count, T const& val);
 	~vector();
 private:
 	// helpers
@@ -204,6 +206,46 @@ private:
 	Traits::construct(allocator,arr+i,std::forward<Args>(args)...);
 	++n;
 	return iterator(arr + i);
+	}
+
+	template <typename ...Args>
+	iterator __insert_many(const_iterator const& pos, size_t count, T const& val) {
+		auto before_pos = pos-1;
+		size_t i{0};
+		if (n + count >= cpt) {
+			std::cout << "grower\n";
+			size_t new_cpt = (cpt + count) * 2;
+			T* new_arr = Traits::allocate(allocator,new_cpt,arr);
+
+			// just do a regular copy to new_arr
+			for (   ;arr + i != pos.itr_p;++i) {
+				Traits::construct(allocator, new_arr + i, std::move_if_noexcept(arr[i]));
+			}
+			// now copy with offset of count
+			for (size_t j{n-1}; j >= i; --j) {
+				Traits::construct(allocator,new_arr + j + count,std::move_if_noexcept(arr[j]));
+			}
+			for (size_t j{0}; j < n;++j) {
+				Traits::destroy(allocator, arr + j);
+			}
+			//TO DO: copy count val's into arr
+			Traits::deallocate(allocator, arr, cpt);
+			arr = new_arr;
+			cpt = new_cpt;
+		} else /*no grow*/	 {
+			// shift from pos by count
+			// shift everything after pos back by count
+			for (i = n-1;true;--i) {
+				Traits::construct(allocator, arr + i + count, std::move_if_noexcept(arr[i]));
+				Traits::destroy(allocator, arr + i);
+				if (arr + i == pos.itr_p) break;
+			}
+		}
+		for (size_t j{i}; j < i + count; ++j) {
+			Traits::construct(allocator,arr + j, val);	
+		}
+		n += count;
+		return iterator(arr + i);
 	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN

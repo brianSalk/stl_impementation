@@ -136,7 +136,16 @@ constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::emplace(co
 	return __insert_or_emplace_one(pos, std::forward<Args>(args)...);
 }
 template<typename T, typename Allocator> 
-	constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(iterator pos, T const& val) {
-		return __insert_or_emplace_one(pos, val);
+constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(const_iterator pos, T const& val) {
+		return __insert_or_emplace_one(pos, std::forward<T>(val));
 	}
+template<typename T, typename Allocator> 
+constexpr typename  vector<T, Allocator>::iterator vector<T,Allocator>::insert(const_iterator pos, T && val) {
+	return __insert_or_emplace_one(std::forward<T>(pos,val));
+}
+
+template<typename T, typename Allocator> 
+constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
+	return __insert_many(pos,count,val);			
+}
 }
