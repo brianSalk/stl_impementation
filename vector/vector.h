@@ -77,6 +77,9 @@ private:
 		friend vector_iterator operator -(vector_iterator const& it, size_t n) {
 			return it.itr_p - n;
 		}
+		friend size_t operator -(vector_iterator const& lhs, vector_iterator const& rhs) {
+	return lhs.itr_p - rhs.itr_p;
+		}
 		auto operator<=>(vector_iterator const& i) const {
 			return this->itr_p <=> i.itr_p;
 		}
@@ -141,6 +144,8 @@ public:
 	constexpr iterator insert(const_iterator pos, T const& val);
 	constexpr iterator insert(const_iterator pos, T && val);
 	constexpr iterator insert(const_iterator pos, size_t count, T const& val);
+	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
+	constexpr iterator insert(const_iterator pos, It first, It last);
 	~vector();
 private:
 	// helpers
@@ -246,6 +251,60 @@ private:
 		}
 		n += count;
 		return iterator(arr + i);
+	}
+	template <typename It>
+	iterator __insert_range(const_iterator pos, It first, It last) {
+		// first get size of range [first, last)
+		size_t count = __get_size(first, last);
+		// first copy range [first,last) to a seperate array
+		size_t i{0};
+		if (n + count > cpt) {
+			std::cout << "grower\n";
+			size_t new_cpt = (cpt + count) * 2;
+			T* new_arr = Traits::allocate(allocator,new_cpt,arr);
+
+			// just do a regular copy to new_arr
+			for (   ;arr + i != pos.itr_p;++i) {
+				Traits::construct(allocator, new_arr + i, std::move_if_noexcept(arr[i]));
+			}
+			// now copy with offset of count
+			for (size_t j{n-1}; j >= i; --j) {
+				Traits::construct(allocator,new_arr + j + count,std::move_if_noexcept(arr[j]));
+			}
+			for (size_t j{0}; j < n;++j) {
+				Traits::destroy(allocator, arr + j);
+			}
+			//TO DO: copy count val's into arr
+			Traits::deallocate(allocator, arr, cpt);
+			arr = new_arr;
+			cpt = new_cpt;
+		} else {
+			// shift from pos by count
+			// shift everything after pos back by count
+			for (i = n-1;true;--i) {
+				Traits::construct(allocator, arr + i + count, std::move_if_noexcept(arr[i]));
+				Traits::destroy(allocator, arr + i);
+				if (arr + i == pos.itr_p) break;
+			}
+		}
+		size_t j{i};
+		for (auto it = first; it != last; ++it) {
+			Traits::construct(allocator,arr + j++, *it);	
+		}
+		n += count;
+		return iterator(arr + i);
+	}
+	template <typename It>
+	requires at_least_random_access_iterator<It> 
+	size_t __get_size(It first, It last) {
+		return last - first;
+	}
+	template <typename It> 
+	requires at_most_bidirectional_iterator<It>
+	size_t __get_size(It first, It last) {
+		size_t size = 0;
+		for (auto it = first; it != last; ++it) { ++size; }
+		return size;
 	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN

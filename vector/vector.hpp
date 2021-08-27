@@ -148,4 +148,9 @@ template<typename T, typename Allocator>
 constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
 	return __insert_many(pos,count,val);			
 }
+template<typename T, typename Allocator>
+template <typename It, typename std::iterator_traits<It>::pointer>
+constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(const_iterator pos, It first, It last) {
+	return __insert_range(pos,first,last);			
+}
 }
