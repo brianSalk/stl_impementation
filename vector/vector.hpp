@@ -153,4 +153,16 @@ template <typename It, typename std::iterator_traits<It>::pointer>
 constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(const_iterator pos, It first, It last) {
 	return __insert_range(pos,first,last);			
 }
+template<typename T, typename Allocator>
+constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::insert(const_iterator pos, std::initializer_list<T> il) {
+	return __insert_range(pos, il.begin(), il.end());
+	}
+template<typename T, typename Allocator>
+constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::erase(const_iterator pos) {
+	return __erase_range(pos,pos+1);			
+}
+template<typename T, typename Allocator>
+constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::erase(const_iterator first, const_iterator last) {
+	return __erase_range(first, last);
+}
 }

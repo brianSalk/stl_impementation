@@ -146,6 +146,9 @@ public:
 	constexpr iterator insert(const_iterator pos, size_t count, T const& val);
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	constexpr iterator insert(const_iterator pos, It first, It last);
+	constexpr iterator insert(const_iterator pos, std::initializer_list<T> il);
+	constexpr iterator erase(const_iterator pos);
+	constexpr iterator erase(const_iterator first, const_iterator last);
 	~vector();
 private:
 	// helpers
@@ -302,9 +305,25 @@ private:
 	template <typename It> 
 	requires at_most_bidirectional_iterator<It>
 	size_t __get_size(It first, It last) {
-		size_t size = 0;
-		for (auto it = first; it != last; ++it) { ++size; }
+		size_t size{0};
+		for (auto it{first}; it != last; ++it) { ++size; }
 		return size;
+	}
+	iterator __erase_range(const_iterator first, const_iterator last) {
+		// destroy elements in range [first,last)
+		size_t num_destroyed{last - first};
+		for (auto it{first}; it != last; ++it) {
+			Traits::destroy(allocator, it.itr_p);
+		}
+		
+		// shift remaining elements after range to the left by num_destroyed
+		iterator curr(const_cast<T*>(first.itr_p));
+		for (; curr != end(); ++curr) {
+			*curr = std::move_if_noexcept(*(curr+num_destroyed));
+			Traits::destroy(allocator, (curr+num_destroyed).itr_p);
+		}
+		n -= num_destroyed;
+		return curr;
 	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN
