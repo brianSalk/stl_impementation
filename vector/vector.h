@@ -162,8 +162,8 @@ public:
 	constexpr void assign(It first, It last);
 	constexpr void assign(std::initializer_list<T> il);
 	/*assignment operator*/
-	constexpr vector& operator=(T const& other);
-	constexpr vector& operator=(T && other) noexcept(Traits::propagate_on_container_move_assignment::value || Traits::is_always_equal::value);
+	constexpr vector& operator=(vector const& other);
+	constexpr vector& operator=(vector && other) noexcept(Traits::propagate_on_container_move_assignment::value || Traits::is_always_equal::value);
 	constexpr vector& operator=(std::initializer_list<T> it);
 	~vector();
 private:

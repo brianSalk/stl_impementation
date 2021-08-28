@@ -305,16 +305,18 @@ constexpr void vector<T,Allocator>::assign(std::initializer_list<T> il) {
 	assign(il.begin(), il.end());
 }
 template<typename T, typename Allocator>
-constexpr typename vector<T, Allocator>::vector<T,Allocator> & 
-vector<T,Allocator>::operator=(T const& other) {
-	return vector();
+constexpr typename vector<T, Allocator>:: template vector<T,Allocator> & 
+vector<T,Allocator>::operator=(vector const& other) {
+	return *this;
 }
 template<typename T, typename Allocator>
 constexpr typename vector<T,Allocator>::vector<T, Allocator>& 
-vector<T,Allocator>::operator=(T && other) noexcept(Traits::propagate_on_container_move_assignment::value || Traits::is_always_equal::value) {
-	return vector();		
+vector<T,Allocator>::operator=(vector && other) noexcept(Traits::propagate_on_container_move_assignment::value || Traits::is_always_equal::value) {
+	return *this;		
 }
 template<typename T, typename Allocator>
-constexpr typename vector<T,Allocator>::vector& 
-operatorvector<T,Allocator>::=(std::initializer_list<T> it);
+constexpr typename vector<T,Allocator>::vector<T, Allocator>& 
+vector<T,Allocator>::operator=(std::initializer_list<T> it) {
+	return *this;
+}
 }
