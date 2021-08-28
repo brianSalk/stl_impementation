@@ -213,4 +213,95 @@ constexpr void vector<T,Allocator>::reserve(size_t new_cpt) {
 	arr = new_arr;
 	cpt = new_cpt;
 }
+template<typename T, typename Allocator>
+constexpr void vector<T,Allocator>::assign(size_t count, T const& val) {
+	// the old needs to be destructed after the new is created, 
+	// that way if the allocation of the new fails, we can fall back on the old
+	// this does, however, make the allocation of new more likely to throw bad_alloc
+	size_t i{0};
+	if (count <= cpt) {
+		// destroy the old
+		for (size_t i{0}; i < n;++i) { Traits::destroy(allocator,arr + i); }
+		// construct the new
+		try {
+			for (; i < count;++i) { Traits::construct(allocator, arr + i, val); }
+		} catch (...) {
+			n = i;
+			throw;
+		}
+	} else {
+		T* new_arr;
+		try {
+			// allocate new array of size count*2
+			new_arr = Traits::allocate(allocator, count*2, arr);
+		} catch(...) {
+			Traits::deallocate(allocator, new_arr, count*2);
+			throw;
+		}
+		try {
+			// construct count new val
+			for (; i < count; ++i) { Traits::construct(allocator, new_arr + i, val); }
+		} catch(...) {
+			n = i;
+			cpt = count*2;
+			throw;
+		}
+		// destroy the old
+		for (size_t j{0}; j < n; ++j) { Traits::destroy(allocator, arr + j); }
+		// deallocate the old
+		Traits::deallocate(allocator, arr, cpt);
+		arr = new_arr;
+		cpt = count*2;
+	}
+	n = count;
+}
+template<typename T, typename Allocator>
+template <typename It, typename std::iterator_traits<It>::pointer>
+constexpr void vector<T,Allocator>::assign(It first, It last) {
+	size_t range_size = __get_size(first, last);			
+	size_t i{0};
+	if (range_size <= cpt) {
+		// destroy the old
+		for (size_t i{0}; i < n;++i) { Traits::destroy(allocator,arr + i); }
+		// construct the new
+		try {
+			for (auto it = first; it != last; ++it,++i) { 
+				Traits::construct(allocator, arr + i, std::move_if_noexcept(*it)); 
+			}
+		} catch (...) {
+			n = i;
+			throw;
+		}
+	} else {
+		T* new_arr;
+		try {
+			// allocate new array of size range_size*2
+			new_arr = Traits::allocate(allocator, range_size*2, arr);
+		} catch(...) {
+			Traits::deallocate(allocator, new_arr, range_size*2);
+			throw;
+		}
+		try {
+			// construct range_size new val
+			for (auto it = first; it != last; ++it, ++i) { 
+				Traits::construct(allocator, new_arr + i, std::move_if_noexcept(*it)); 
+			}
+		} catch(...) {
+			n = i;
+			cpt = range_size*2;
+			throw;
+		}
+		// destroy the old
+		for (size_t j{0}; j < n; ++j) { Traits::destroy(allocator, arr + j); }
+		// deallocate the old
+		Traits::deallocate(allocator, arr, cpt);
+		arr = new_arr;
+		cpt = range_size*2;
+	}
+	n = range_size;
+}
+template<typename T, typename Allocator>
+constexpr void vector<T,Allocator>::assign(std::initializer_list<T> il) {
+	assign(il.begin(), il.end());
+}
 }

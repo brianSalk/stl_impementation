@@ -152,8 +152,13 @@ public:
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	constexpr iterator insert(const_iterator pos, It first, It last);
 	constexpr iterator insert(const_iterator pos, std::initializer_list<T> il);
+	/*erase*/
 	constexpr iterator erase(const_iterator pos);
 	constexpr iterator erase(const_iterator first, const_iterator last);
+	constexpr void assign(size_t count, T const& val);
+	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
+	constexpr void assign(It first, It last);
+	constexpr void assign(std::initializer_list<T> il);
 	~vector();
 private:
 	// helpers
