@@ -103,9 +103,11 @@ public:
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	constexpr vector(It,It);
 	vector(std::initializer_list<T> il);
+	constexpr void shrink_to_fit();
 	// observers
 	constexpr Allocator get_allocator() const noexcept { return allocator; }
 	constexpr size_t size() const noexcept { return n; }
+	constexpr size_t max_size() const noexcept { return Traits::max_size(allocator); }
 	constexpr size_t capacity() const noexcept { return cpt; }
 	constexpr reference operator[](size_t pos) { return arr[pos]; }
 	constexpr const_reference operator[](size_t pos) const { return arr[pos]; }
@@ -115,6 +117,7 @@ public:
 	constexpr const_reference back() const { return arr[n-1]; }
 	constexpr reference at(size_t pos) { return (pos<n) ? arr[pos] : throw std::out_of_range("at attempted to access element not in range"); }
 	constexpr const_reference at(size_t pos) const { return at(pos); }
+	[[nodiscard]]constexpr bool empty() const noexcept { return begin() == end(); }
 
 
 	iterator 				begin() { return iterator(arr); }
@@ -125,7 +128,8 @@ public:
 	reverse_iterator 		rbegin() const { return const_reverse_iterator(arr + n); }
 
 	iterator 				end() { return iterator(arr + n); }
-	const_iterator			end() const { return const_iterator(arr + n); } 				
+	const_iterator			end() const { return const_iterator(arr + n); } 			
+
 	const_iterator			cend() const { return const_iterator(arr + n); }
 	const_reverse_iterator  crend() const { return const_reverse_iterator(arr); }
 	const_reverse_iterator  rend() { return const_reverse_iterator(arr); }
@@ -140,6 +144,7 @@ public:
 	constexpr void clear() noexcept;
 	template <typename ...Args>
 	constexpr iterator emplace(const_iterator pos, Args &&...args);
+	constexpr void reserve(size_t new_cap);
 	/*insert*/
 	constexpr iterator insert(const_iterator pos, T const& val);
 	constexpr iterator insert(const_iterator pos, T && val);

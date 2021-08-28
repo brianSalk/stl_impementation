@@ -165,4 +165,52 @@ template<typename T, typename Allocator>
 constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::erase(const_iterator first, const_iterator last) {
 	return __erase_range(first, last);
 }
+template<typename T, typename Allocator>
+constexpr void vector<T,Allocator>::shrink_to_fit() {
+	if (n == cpt) { return; }
+	T* new_arr;
+	size_t i{0};
+	try {
+		new_arr = Traits::allocate(allocator,n);
+		for (; i < n;++i) {
+			Traits::construct(allocator, new_arr + i, arr[i]);
+		}
+	} catch(...) {
+		for (size_t j{0}; j < i; ++j) {
+			Traits::destroy(allocator, new_arr + j);
+		}
+		Traits::deallocate(allocator,arr,i);
+		throw;
+	}
+	for (size_t i{0}; i < n;++i) {
+		Traits::destroy(allocator, arr + i);
+	}
+	Traits::deallocate(allocator, arr,cpt);
+	arr = new_arr;
+	cpt = n;
+}
+template<typename T, typename Allocator>
+constexpr void vector<T,Allocator>::reserve(size_t new_cpt) {
+	size_t i{0};
+	if (new_cpt <= cpt) { return; }
+	T* new_arr;
+	try {
+		new_arr = Traits::allocate(allocator, new_cpt, arr);
+		for (;i < n; ++i) {
+			Traits::construct(allocator, new_arr + i, arr[i]);
+		}
+	} catch(...) {
+		for (size_t j{0}; j < i; ++j) {
+			Traits::destroy(allocator, new_arr + j);
+		}
+		Traits::deallocate(allocator, new_arr, new_cpt);
+		throw;
+	}
+	for (size_t j{0}; j < n; ++j) {
+		Traits::destroy(allocator, arr + j);
+	}
+	Traits::deallocate(allocator, arr, cpt);
+	arr = new_arr;
+	cpt = new_cpt;
+}
 }
