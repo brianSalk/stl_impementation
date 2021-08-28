@@ -104,6 +104,7 @@ public:
 	constexpr vector(It,It);
 	vector(std::initializer_list<T> il);
 	constexpr void shrink_to_fit();
+
 	// observers
 	constexpr Allocator get_allocator() const noexcept { return allocator; }
 	constexpr size_t size() const noexcept { return n; }
@@ -155,10 +156,15 @@ public:
 	/*erase*/
 	constexpr iterator erase(const_iterator pos);
 	constexpr iterator erase(const_iterator first, const_iterator last);
+	/*assign*/
 	constexpr void assign(size_t count, T const& val);
 	template <typename It, typename std::iterator_traits<It>::pointer=nullptr>
 	constexpr void assign(It first, It last);
 	constexpr void assign(std::initializer_list<T> il);
+	/*assignment operator*/
+	constexpr vector& operator=(T const& other);
+	constexpr vector& operator=(T && other) noexcept(Traits::propagate_on_container_move_assignment::value || Traits::is_always_equal::value);
+	constexpr vector& operator=(std::initializer_list<T> it);
 	~vector();
 private:
 	// helpers
