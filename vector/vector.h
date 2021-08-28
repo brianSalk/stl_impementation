@@ -341,6 +341,14 @@ private:
 		n -= num_destroyed;
 		return curr;
 	}
+	/*friend functions/operator*/
+	friend bool operator==(vector<T> const& lhs, vector<T> const& rhs) {
+		if (lhs.size() != rhs.size()) { return false; }
+		for (size_t i{0}; i < lhs.size(); ++i) {
+			if (lhs[i] != rhs[i]) { return false; }
+		}
+		return true;
+	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN
 #include "vector.hpp"
