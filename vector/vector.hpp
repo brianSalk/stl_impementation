@@ -307,6 +307,44 @@ constexpr void vector<T,Allocator>::assign(std::initializer_list<T> il) {
 template<typename T, typename Allocator>
 constexpr typename vector<T, Allocator>:: template vector<T,Allocator> & 
 vector<T,Allocator>::operator=(vector const& other) {
+	if (Traits::propagate_on_container_copy_assignment::value) {
+		this->allocator = other.get_allocator();
+	} else if (this->allocator != other.get_allocator() || this->cpt < other.n) {
+		// destroy and reallocate
+		size_t i{0};
+		T* new_arr;
+		try {
+			new_arr = Traits::allocate(allocator, other.cpt);
+			for (size_t j{0}; j < other.n; ++j) {
+				Traits::construct(allocator, new_arr + j,other[j]);
+			}
+		} catch(...) {
+			for (size_t j{0}; j < i; ++j) {
+				Traits::destroy(allocator, new_arr + j);
+			}
+			Traits::deallocate(allocator, new_arr, this->cpt);
+			throw;
+		}
+		for (size_t j{0}; j < this->n; ++j) {
+			Traits::destroy(allocator, arr + j);
+		}	
+		Traits::deallocate(allocator, this->arr, this->cpt);
+		arr = new_arr;
+		this->n = other.n;
+		this->cpt = other.cpt;
+		return *this;
+	}
+	// allocators are equal and we have the capacity so we can reassign old data
+	// TO DO: find out if capacity is required to be equal to other after assignment.
+	// Im just going to assume it does not here
+	// we can just reassign elements of this to elements of other		
+	for (size_t j{0}; j < this->n; ++j) {
+		Traits::destroy(allocator, this->arr + j);
+	}
+	for (size_t j{0}; j < other.size(); ++j) {
+		Traits::construct(allocator, this->arr + j, other.arr[j]);
+	}
+	this->n = other.n;
 	return *this;
 }
 template<typename T, typename Allocator>
