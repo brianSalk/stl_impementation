@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <concepts>
 #include <utility>
+#include <cmath> // min
 #include "../my_concepts.h"
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>> 
@@ -348,6 +349,15 @@ private:
 			if (lhs[i] != rhs[i]) { return false; }
 		}
 		return true;
+	}
+public:
+	auto operator<=>(vector<T> const& rhs) const {
+		size_t s = std::min(this->size(),rhs.size());
+		for (size_t i{0};i < s;++i) {
+			auto cmp = this->operator[](i) <=> rhs[i];
+			if (cmp != 0) { return cmp; }
+		}
+		return this->size() <=> rhs.size();
 	}
 }; // END CLASS VECTOR
 } // END NAMESPACE BRIAN
