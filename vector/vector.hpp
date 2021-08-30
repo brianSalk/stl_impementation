@@ -341,8 +341,14 @@ vector<T,Allocator>::operator=(vector const& other) {
 	for (size_t j{0}; j < this->n; ++j) {
 		Traits::destroy(allocator, this->arr + j);
 	}
-	for (size_t j{0}; j < other.size(); ++j) {
-		Traits::construct(allocator, this->arr + j, other.arr[j]);
+	size_t i{0};
+	try {
+		for (; i < other.size(); ++i) {
+			Traits::construct(allocator, this->arr + i, other.arr[i]);
+		}
+	} catch(...) {
+		this->n = i;
+		throw;
 	}
 	this->n = other.n;
 	return *this;
@@ -350,11 +356,88 @@ vector<T,Allocator>::operator=(vector const& other) {
 template<typename T, typename Allocator>
 constexpr typename vector<T,Allocator>::vector<T, Allocator>& 
 vector<T,Allocator>::operator=(vector && other) noexcept(Traits::propagate_on_container_move_assignment::value || Traits::is_always_equal::value) {
+	if (Traits::propagate_on_container_move_assignment::value) {
+		this->allocator = other.get_allocator();
+	} else if (this->allocator != other.allocator || this->cpt < other.n) {
+		std::cout << "reallocate\n";
+		// we need to delete this->arr and allocate new_arr
+		T* new_arr;
+		size_t new_cpt = other.n *2;
+		size_t new_n = other.n;
+		new_arr = Traits::allocate(allocator, new_cpt, arr);
+		size_t i{0};
+		try {
+			for (;i < other.n; ++i) {
+				Traits::construct(allocator, new_arr + i, std::move(other.arr[i]));
+			}
+		} catch(...) {
+			for (size_t j{0}; j < i; ++j) {
+				Traits::destroy(allocator, arr + j);
+			}
+			Traits::deallocate(allocator, new_arr, new_cpt);
+			throw;
+		}
+		for (size_t j{0}; j < i; ++j) {
+			Traits::destroy(allocator, arr + j);
+		}
+		Traits::deallocate(allocator, arr, this->cpt);
+		n = new_n;
+		cpt = new_cpt;
+		return *this;
+	}
+	// we can try to reuse memory here, so destroy/deallocate the old and repoint
+	// destry old
+	for (size_t j{0}; j < this->n; ++j) {
+		Traits::destroy(allocator, this->arr + j);
+	}
+	Traits::deallocate(allocator, this->arr, this->cpt);
+	this->arr = other.arr;
+	this->n = other.n;
+	this->cpt = other.cpt;
+	other.arr = nullptr;
+	other.n = 0;
+	other.cpt = 0;
 	return *this;		
 }
 template<typename T, typename Allocator>
 constexpr typename vector<T,Allocator>::vector<T, Allocator>& 
-vector<T,Allocator>::operator=(std::initializer_list<T> it) {
+vector<T,Allocator>::operator=(std::initializer_list<T> il) {
+	T* new_arr;
+	size_t new_cpt = il.size() * 2;
+	size_t new_n = il.size();
+	size_t i{0};
+	auto il_p = data(il);
+	new_arr = Traits::allocate(allocator, new_cpt, arr);
+	try {
+		for (; i < new_n; ++i) {
+			Traits::construct(allocator, new_arr + i, il_p[i]);	
+		}
+	} catch(...) {
+		for (size_t j{0}; j < i; ++j) {
+			Traits::destroy(allocator, new_arr + j);
+		}
+		Traits::deallocate(allocator, new_arr, new_cpt);
+		throw;
+	}
+	for (size_t j{0}; j < n; ++j) {
+		Traits::destroy(allocator, arr + j);
+	}
+	Traits::deallocate(allocator, arr, cpt);
+	arr = new_arr;
+	n = new_n;
+	cpt = new_cpt;
 	return *this;
+}
+template<typename T, typename Allocator>
+constexpr void vector<T,Allocator>::swap(vector& other) noexcept(Traits::propagate_on_container_swap::value || Traits::is_always_equal::value) {
+		auto tmp_arr = this->arr;
+		auto tmp_n = this->n;
+		auto tmp_cpt = this->cpt;
+		this->arr = other.arr;
+		this->n = other.n;
+		this->cpt = other.cpt;
+		other.arr = tmp_arr;
+		other.n = tmp_n;
+		other.cpt = tmp_cpt;
 }
 }
