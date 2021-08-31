@@ -333,14 +333,13 @@ private:
 		for (auto it{first}; it != last; ++it) {
 			Traits::destroy(allocator, it.itr_p);
 		}
-		
 		// shift remaining elements after range to the left by num_destroyed
+		n -= num_destroyed;
 		iterator curr(const_cast<T*>(first.itr_p));
 		for (; curr != end(); ++curr) {
 			*curr = std::move_if_noexcept(*(curr+num_destroyed));
 			Traits::destroy(allocator, (curr+num_destroyed).itr_p);
 		}
-		n -= num_destroyed;
 		return curr;
 	}
 	/*friend functions/operator*/
@@ -361,5 +360,19 @@ public:
 		return this->size() <=> rhs.size();
 	}
 }; // END CLASS VECTOR
+template <typename T, typename Alloc, typename U>
+constexpr typename std::allocator_traits<Alloc>::size_type
+erase(vector<T,Alloc>& vec, U const& val) {
+	size_t i{0}, replace_with_indx{0};
+	for (; replace_with_indx < vec.size(); ++i, ++replace_with_indx) {
+		while (vec[replace_with_indx] == val) {
+			if (++replace_with_indx == vec.size()) { break; }
+		}
+		if (replace_with_indx == vec.size()) { break; }
+		vec[i] = vec[replace_with_indx];
+	}
+	vec.erase(vec.begin() + i,vec.end());
+	return replace_with_indx - i;
+}
 } // END NAMESPACE BRIAN
 #include "vector.hpp"
