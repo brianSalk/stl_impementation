@@ -120,6 +120,7 @@ public:
 	constexpr reference at(size_t pos) { return (pos<n) ? arr[pos] : throw std::out_of_range("at attempted to access element not in range"); }
 	constexpr const_reference at(size_t pos) const { return at(pos); }
 	[[nodiscard]]constexpr bool empty() const noexcept { return begin() == end(); }
+	constexpr T const* data() const noexcept { return arr; }
 
 
 	iterator 				begin() { return iterator(arr); }
@@ -167,6 +168,9 @@ public:
 	constexpr vector& operator=(vector && other) noexcept(Traits::propagate_on_container_move_assignment::value || Traits::is_always_equal::value);
 	constexpr vector& operator=(std::initializer_list<T> it);
 	constexpr void swap(vector& other) noexcept(Traits::propagate_on_container_swap::value || Traits::is_always_equal::value);
+	/*resize*/
+	constexpr void resize(size_t count);
+	constexpr void resize(size_t count, T const& val);
 	~vector();
 private:
 	// helpers
@@ -342,6 +346,61 @@ private:
 		}
 		return curr;
 	}
+	template <typename ... Args>
+	void __resize(size_t new_size, Args &&...args) {
+		if (new_size < n) {
+			std::cout << "shrinking\n";
+			// destroy old values
+			for (size_t i{n-1}; i >= new_size; --i) {
+				Traits::destroy(allocator, arr + i);
+			}
+		} else if (new_size > n) {
+			std::cout << "growing\n";
+			size_t i{0};
+			if (this->cpt > new_size) {
+				std::cout << "no realloc\n";
+				// do not reallocate
+				for (; i + n < new_size; ++i) {
+					Traits::construct(allocator, arr + i + n, std::forward<Args>(args)...);
+				}
+			} else {
+				std::cout << "realloc\n";
+				// reallocate
+				T* new_arr;
+				size_t new_cpt = new_size * 2;
+				try {
+					new_arr = Traits::allocate(allocator, new_cpt, arr);
+				} catch(...) {
+					// attempt allocation again with new_cpt == new_size
+					// if it fails, let the client handle it
+					new_cpt = new_size;
+					new_arr = Traits::allocate(allocator, new_cpt, arr);
+				}
+				size_t i{0};
+				try {
+					for (; i < n; ++i) {
+						Traits::construct(allocator, new_arr + i, arr[i]);
+					}
+					for (; i < new_size; ++i) {
+						Traits::construct(allocator, new_arr + i, std::forward<Args>(args)...);
+					}
+				} catch(...) {
+					for (size_t j{0}; j < i; ++j) {
+						Traits::destroy(allocator, new_arr + j);
+					}
+					Traits::deallocate(allocator, new_arr, new_cpt);
+					throw;
+				}
+				for (size_t j{0}; i < n; ++j) {
+					Traits::destroy(allocator, arr + j);
+				}
+				Traits::deallocate(allocator, arr, cpt);
+				arr = new_arr;
+				cpt = new_cpt;
+			}
+		}
+		n = new_size;
+	}
 	/*friend functions/operator*/
 	friend bool operator==(vector<T> const& lhs, vector<T> const& rhs) {
 		if (lhs.size() != rhs.size()) { return false; }
@@ -361,15 +420,41 @@ public:
 	}
 }; // END CLASS VECTOR
 template <typename T, typename Alloc, typename U>
+requires std::convertible_to<U,T>
 constexpr typename std::allocator_traits<Alloc>::size_type
 erase(vector<T,Alloc>& vec, U const& val) {
 	size_t i{0}, replace_with_indx{0};
-	for (; replace_with_indx < vec.size(); ++i, ++replace_with_indx) {
-		while (vec[replace_with_indx] == val) {
-			if (++replace_with_indx == vec.size()) { break; }
+	try {
+		for (; replace_with_indx < vec.size(); ++i, ++replace_with_indx) {
+			while (vec[replace_with_indx] == val) {
+				if (++replace_with_indx == vec.size()) { break; }
+			}
+			if (replace_with_indx == vec.size()) { break; }
+			vec[i] = std::move(vec[replace_with_indx]);
 		}
-		if (replace_with_indx == vec.size()) { break; }
-		vec[i] = vec[replace_with_indx];
+	} catch(...) {
+		vec.erase(vec.begin() + i, vec.end());
+		throw;
+	}
+	vec.erase(vec.begin() + i,vec.end());
+	return replace_with_indx - i;
+}
+template <typename T, typename Alloc, typename Pred>
+requires std::predicate<Pred, T>
+constexpr typename std::allocator_traits<Alloc>::size_type
+erase(vector<T,Alloc>& vec, Pred const& pred) {
+	size_t i{0}, replace_with_indx{0};
+	try {
+		for (; replace_with_indx < vec.size(); ++i, ++replace_with_indx) {
+			while (Pred(vec[replace_with_indx])) {
+				if (++replace_with_indx == vec.size()) { break; }
+			}
+			if (replace_with_indx == vec.size()) { break; }
+			vec[i] = std::move(vec[replace_with_indx]);
+		}
+	} catch(...) {
+		vec.erase(vec.begin() + i, vec.end());
+		throw;
 	}
 	vec.erase(vec.begin() + i,vec.end());
 	return replace_with_indx - i;

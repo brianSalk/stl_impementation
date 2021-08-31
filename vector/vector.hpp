@@ -440,4 +440,12 @@ constexpr void vector<T,Allocator>::swap(vector& other) noexcept(Traits::propaga
 		other.n = tmp_n;
 		other.cpt = tmp_cpt;
 }
+template<typename T, typename Allocator>
+constexpr void vector<T,Allocator>::resize(size_t count) {
+	__resize(count);
+}
+template<typename T, typename Allocator>
+constexpr void vector<T,Allocator>::resize(size_t count, T const& val) {
+	__resize(count, val);
+}
 }
