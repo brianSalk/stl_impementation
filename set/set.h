@@ -3,9 +3,24 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <ostream>
 namespace brian {
 template <typename Key, typename Compare = std::less<Key>, typename Allocator = std::allocator<Key> >
 class set {
+private:
+	struct node {
+		Key data;
+		node* left;
+		node* right;
+		enum color {BLACK,RED};
+		node(Key d) : data(d), left(nullptr), right(nullptr) {}
+		// for debugging 
+		friend std::ostream& operator<<(std::ostream& os, node const& n) {
+			os << n.data << ", " << n.color;
+			return os;
+		}
+	};
+public:
 	using key_type = Key;
 	using value_type = Key;	
 	using size_type = size_t;
@@ -22,7 +37,15 @@ class set {
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	using node_type = node;
-	using insert_return_type = unsure;
+	template <typename Iter, typename Node>
+	struct insert_return_type {
+		Iter position;
+		bool inserted;
+		Node node;
+		insert_return_type<Iter, Node>() {}
+		insert_return_type<Iter,Node>(Iter it, Node n) : position(it), node(n) {}
+	};
+
 
 }; // END CLASS SET
 }// END NAMESPACE BRIAN
