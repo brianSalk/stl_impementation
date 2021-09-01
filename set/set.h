@@ -8,18 +8,36 @@ namespace brian {
 template <typename Key, typename Compare = std::less<Key>, typename Allocator = std::allocator<Key> >
 class set {
 private:
-	struct node {
-		Key data;
-		node* left;
-		node* right;
+	struct base_node {
+		base_node* left;
+		base_node* right;
+		base_node* parent;
 		enum color {BLACK,RED};
-		node(Key d) : data(d), left(nullptr), right(nullptr) {}
+		base_node() : left(nullptr), right(nullptr), parent(nullptr) {}
+		base_node(base_node* p) : left(nullptr), right(nullptr), parent(p) {}
+
+	};
+	class node : base_node {
+		Key data;
+		// val
+		template <typename ...Args>
+		node(Args &&...args) : base_node(), data(std::forward<Args>(args)...) {}
+		// val, parent
+		node(Key d, node* p) : data(d), 
+			base_node::left(nullptr), 
+			base_node::right(nullptr), 
+			base_node::parent(p) {}
 		// for debugging 
+	public:
 		friend std::ostream& operator<<(std::ostream& os, node const& n) {
 			os << n.data << ", " << n.color;
 			return os;
 		}
+		Key value() const noexcept {
+			return data;
+		}
 	};
+	node pre_root;
 public:
 	using key_type = Key;
 	using value_type = Key;	
@@ -45,6 +63,7 @@ public:
 		insert_return_type<Iter, Node>() {}
 		insert_return_type<Iter,Node>(Iter it, Node n) : position(it), node(n) {}
 	};
+	
 
 
 }; // END CLASS SET
