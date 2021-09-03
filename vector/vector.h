@@ -120,7 +120,7 @@ public:
 	constexpr reference at(size_t pos) { return (pos<n) ? arr[pos] : throw std::out_of_range("at attempted to access element not in range"); }
 	constexpr const_reference at(size_t pos) const { return at(pos); }
 	[[nodiscard]]constexpr bool empty() const noexcept { return begin() == end(); }
-	constexpr T const* data() const noexcept { return arr; }
+	constexpr const_pointer data() const noexcept { return arr; }
 
 
 	iterator 				begin() { return iterator(arr); }
