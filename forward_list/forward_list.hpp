@@ -14,9 +14,7 @@
 namespace brian {
 	// constructors
 	template<typename T, typename Allocator>
-	forward_list<T,Allocator>::forward_list() {
-		pre_head = &__pre_head;
-	}
+	forward_list<T,Allocator>::forward_list() :pre_head(create_base_node()) {}
 	template<typename T, typename Allocator>
 	forward_list<T,Allocator>::forward_list(Allocator const& alloc) :forward_list() {
 		value_allocator = alloc;
@@ -114,7 +112,7 @@ namespace brian {
 	}
 	// move constructor
 	template <typename T, typename Allocator>
-	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : value_allocator(std::move(other.value_allocator)), pre_head(&__pre_head){
+	forward_list<T, Allocator>::forward_list(forward_list<T,Allocator> && other) : value_allocator(std::move(other.value_allocator)), pre_head(create_base_node()){
 		pre_head->next = other.pre_head->next;
 		other.pre_head->next = nullptr;
 	}
@@ -528,6 +526,7 @@ namespace brian {
 	template <typename T, typename Allocator>
 	forward_list<T, Allocator>::~forward_list() {
 		clear();
+		delete_node(pre_head);
 	}
 	template <typename T, typename Allocator>
 	void forward_list<T, Allocator>::clear() noexcept {

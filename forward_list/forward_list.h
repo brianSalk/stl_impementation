@@ -53,8 +53,22 @@ private:
 	using NodeAlloc_t = typename std::allocator_traits<Allocator>::template rebind_alloc<derived_node>;
 	NodeAlloc_t node_allocator;
 	using Traits = typename std::allocator_traits<NodeAlloc_t>;
-	base_node* pre_head;
-	base_node __pre_head;
+	using BaseNodeAlloc_t = typename std::allocator_traits<Allocator>::
+		template rebind_alloc<base_node>;
+	BaseNodeAlloc_t base_node_allocator;
+	using BTraits = typename std::allocator_traits<BaseNodeAlloc_t>;	
+	using base_node_pointer = typename BTraits::pointer;
+	base_node_pointer create_base_node() {
+		base_node_pointer new_node = BTraits::allocate(base_node_allocator,1);
+		BTraits::construct(base_node_allocator, new_node);
+		return new_node;
+	}
+	void delete_base_node(base_node_pointer del_node) {
+		BTraits::destroy(base_node_allocator, del_node);
+		BTraits::deallocate(base_node_allocator, del_node, 1);
+	}
+	
+	base_node_pointer pre_head;
 public:
 	// DELETE ME: this method is for debugging only
 	void dump() const { 
