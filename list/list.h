@@ -11,6 +11,19 @@
 namespace brian {
 template <typename T, typename Allocator = std::allocator<T>>
 class list {
+	struct node;
+	struct base_node;
+	using node_allocator_t = typename std::allocator_traits<Allocator>
+		::template rebind_alloc<node>;
+	node_allocator_t node_allocator;
+	using Traits = std::allocator_traits<node_allocator_t>;
+	using node_pointer = typename Traits::pointer;
+	Allocator value_allocator;
+	using base_node_allocator_t = typename std::allocator_traits<Allocator>
+		::template rebind_alloc<base_node>;
+	base_node_allocator_t base_node_allocator;
+	using BTraits = std::allocator_traits<base_node_allocator_t>;
+	using base_node_pointer	= typename BTraits::pointer;
 	template <bool Is_Const>
 	class list_iterator;
 	template <bool Is_Const>
@@ -28,7 +41,7 @@ class list {
 		node() : base_node() {}
 		// constructor overload used when no node is passed
 		template <typename U,typename ...Args, typename = 
-			std::enable_if_t<!std::is_same<U,base_node*>::value && !std::is_same<U,node*>::value>>
+			std::enable_if_t<!std::is_same<U,base_node*>::value && !std::is_same<U,node_pointer>::value>>
 		node(U && u,Args &&...args) : base_node(), val(std::forward<U>(u),std::forward<Args>(args)...){}
 		// constructor overload used when node is passed
 		template <typename ...Args>
@@ -48,16 +61,6 @@ class list {
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	private:
-	using node_allocator_t = typename std::allocator_traits<allocator_type>
-		::template rebind_alloc<node>;
-	node_allocator_t node_allocator;
-	using Traits = std::allocator_traits<node_allocator_t>;
-	Allocator value_allocator;
-	using base_node_allocator_t = typename std::allocator_traits<allocator_type>
-		::template rebind_alloc<base_node>;
-	base_node_allocator_t base_node_allocator;
-	using BTraits = std::allocator_traits<base_node_allocator_t>;
-	using base_node_pointer	= typename BTraits::pointer;
 	base_node_pointer create_base_node() {
 		base_node_pointer new_node = BTraits::allocate(base_node_allocator, 1);
 		BTraits::construct(base_node_allocator,new_node);
@@ -202,7 +205,7 @@ private:
 			return lhs.itr_curr != rhs.itr_curr;
 		}
 		reference operator*() {
-				return static_cast<node*>(itr_curr)->val;
+				return static_cast<node_pointer>(itr_curr)->val;
 		}
 		// stuff unique to forward_iterator
 		// prefix incrament
@@ -229,7 +232,7 @@ private:
 		}
 		// overload the -> operator
 		pointer operator->() {
-			return &static_cast<node*>(itr_curr)->val;
+			return &static_cast<node_pointer>(itr_curr)->val;
 		}
 
 	private:
@@ -237,8 +240,8 @@ private:
 	};	
 	// helper methods
 	template <typename ...Args>
-	node* create_node(Args &&...args) {
-		node* new_node = Traits::allocate(node_allocator,1);
+	node_pointer create_node(Args &&...args) {
+		node_pointer new_node = Traits::allocate(node_allocator,1);
 		try {
 			Traits::construct(node_allocator,new_node,std::forward<Args>(args)...);
 		}
@@ -249,8 +252,8 @@ private:
 		return new_node;
 	}
 	template <typename ...Args>
-	node* create_node_with_hint(base_node* hint,Args &&...args) {
-		node* new_node = Traits::allocate(node_allocator,1,static_cast<node*>(hint));
+	node_pointer create_node_with_hint(base_node* hint,Args &&...args) {
+		node_pointer new_node = Traits::allocate(node_allocator,1,static_cast<node_pointer>(hint));
 		try {
 			Traits::construct(node_allocator,new_node,std::forward<Args>(args)...);
 		}
@@ -261,8 +264,8 @@ private:
 		return new_node;
 	}
 	void delete_node(base_node* del_node) {
-		Traits::destroy(node_allocator, static_cast<node*>(del_node));
-		Traits::deallocate(node_allocator, static_cast<node*>(del_node),1);
+		Traits::destroy(node_allocator, static_cast<node_pointer>(del_node));
+		Traits::deallocate(node_allocator, static_cast<node_pointer>(del_node),1);
 	}
 	// used to connect 2 preexisting nodes
 	void connect_nodes(base_node* first, base_node* second) {
@@ -336,7 +339,7 @@ private:
 		base_node* this_curr = this->pre_head;
 		try {
 			while (other_curr != other.end()) {
-				node* new_node = create_node(this_curr,static_cast<node*>(other_curr)->val);
+				node_pointer new_node = create_node(this_curr,static_cast<node_pointer>(other_curr)->val);
 				this_curr->next = new_node;	
 				this_curr = new_node;
 				other_curr = other_curr->next;
@@ -394,14 +397,14 @@ private:
 	}
 	template <typename Pred>
 	size_t __remove_if(Pred  const& pred) {
-		node* curr = static_cast<node*>(pre_head->next);
+		node_pointer curr = static_cast<node_pointer>(pre_head->next);
 		size_t count = 0;
 		while (curr != aft_tail) {
 			base_node* prev = curr->prev;
 			if (pred(curr->val)) {
 				while (pred(curr->val)) {
 					base_node* del_node = curr;
-					curr = static_cast<node*>(del_node->next);
+					curr = static_cast<node_pointer>(del_node->next);
 					delete_node(del_node);
 					++count;
 					if (curr == aft_tail) {
@@ -412,16 +415,16 @@ private:
 				}
 			connect_nodes(prev,curr);
 			}
-			curr = static_cast<node*>(curr->next);
+			curr = static_cast<node_pointer>(curr->next);
 		}
 		n -= count;
 		return count;
 	}
 	// must provide basic exception garentee if cmp throws an exception
 	template <typename Cmp>
-	void __merge(node* right_curr, base_node*& right_end,Cmp const& cmp) {
+	void __merge(node_pointer right_curr, base_node*& right_end,Cmp const& cmp) {
 		if (this->pre_head->next == right_curr) return;
-		node* this_curr = static_cast<node*>(this->pre_head->next);
+		node_pointer this_curr = static_cast<node_pointer>(this->pre_head->next);
 		base_node* curr = this->pre_head;
 		base_node* right_beg = right_curr->prev;
 		try {
@@ -429,11 +432,11 @@ private:
 				if (cmp(right_curr->val,this_curr->val)) {
 					connect_nodes(curr, right_curr);
 					curr = curr->next;
-					right_curr = static_cast<node*>(right_curr->next);
+					right_curr = static_cast<node_pointer>(right_curr->next);
 				} else {
 					connect_nodes(curr, this_curr);
 					curr = curr->next;
-					this_curr = static_cast<node*>(this_curr->next);
+					this_curr = static_cast<node_pointer>(this_curr->next);
 				}
 			}
 		} catch (...) {
@@ -443,7 +446,7 @@ private:
 			auto c = right_curr;
 			while (c != right_end) {
 				auto del_node = c;
-				c = static_cast<node*>(c->next);
+				c = static_cast<node_pointer>(c->next);
 				delete_node(del_node);
 			}
 			connect_nodes(right_beg,right_end);
@@ -475,15 +478,15 @@ private:
 	}
 	template <typename Eq>
 	size_type __unique(Eq const& eq) {
-		node* curr = static_cast<node*>(pre_head->next);
-		node* next = static_cast<node*>(curr->next);
+		node_pointer curr = static_cast<node_pointer>(pre_head->next);
+		node_pointer next = static_cast<node_pointer>(curr->next);
 		size_t count = 0;
 		while (next != end()) {
 			try {
 				if (eq(curr->val,next->val)) {
 					while (next != end() && eq(curr->val,next->val)) {
 						auto del_node = next;	
-						next = static_cast<node*>(next->next);
+						next = static_cast<node_pointer>(next->next);
 						delete_node(del_node);
 						++count;
 					}
@@ -494,9 +497,9 @@ private:
 				n -= count;
 				throw;
 			}
-			curr = static_cast<node*>(curr->next);
-			next = (curr != end()) ? static_cast<node*>(curr->next) :
-			   	static_cast<node*>(end().itr_curr);
+			curr = static_cast<node_pointer>(curr->next);
+			next = (curr != end()) ? static_cast<node_pointer>(curr->next) :
+			   	static_cast<node_pointer>(end().itr_curr);
 		}
 		n -= count;
 		return count;
@@ -525,7 +528,7 @@ private:
 		base_node* new_tail = &dummy_head;
 		while (list1 != aft_tail && list2 != aft_tail) {
 			try {
-				if (less(static_cast<node*>(list1)->val, static_cast<node*>(list2)->val)) {
+				if (less(static_cast<node_pointer>(list1)->val, static_cast<node_pointer>(list2)->val)) {
 					new_tail->next = list1;
 					list1 = list1->next;
 					new_tail = new_tail->next;
