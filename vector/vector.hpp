@@ -168,7 +168,7 @@ constexpr typename vector<T,Allocator>::iterator vector<T,Allocator>::erase(cons
 template<typename T, typename Allocator>
 constexpr void vector<T,Allocator>::shrink_to_fit() {
 	if (n == cpt) { return; }
-	T* new_arr;
+	pointer new_arr;
 	size_t i{0};
 	try {
 		new_arr = Traits::allocate(allocator,n);
@@ -193,7 +193,7 @@ template<typename T, typename Allocator>
 constexpr void vector<T,Allocator>::reserve(size_t new_cpt) {
 	size_t i{0};
 	if (new_cpt <= cpt) { return; }
-	T* new_arr;
+	pointer new_arr;
 	try {
 		new_arr = Traits::allocate(allocator, new_cpt, arr);
 		for (;i < n; ++i) {
@@ -230,7 +230,7 @@ constexpr void vector<T,Allocator>::assign(size_t count, T const& val) {
 			throw;
 		}
 	} else {
-		T* new_arr;
+		pointer new_arr;
 		try {
 			// allocate new array of size count*2
 			new_arr = Traits::allocate(allocator, count*2, arr);
@@ -273,7 +273,7 @@ constexpr void vector<T,Allocator>::assign(It first, It last) {
 			throw;
 		}
 	} else {
-		T* new_arr;
+		pointer new_arr;
 		try {
 			// allocate new array of size range_size*2
 			new_arr = Traits::allocate(allocator, range_size*2, arr);
@@ -312,7 +312,7 @@ vector<T,Allocator>::operator=(vector const& other) {
 	} else if (this->allocator != other.get_allocator() || this->cpt < other.n) {
 		// destroy and reallocate
 		size_t i{0};
-		T* new_arr;
+		pointer new_arr;
 		try {
 			new_arr = Traits::allocate(allocator, other.cpt);
 			for (size_t j{0}; j < other.n; ++j) {
@@ -361,7 +361,7 @@ vector<T,Allocator>::operator=(vector && other) noexcept(Traits::propagate_on_co
 	} else if (this->allocator != other.allocator || this->cpt < other.n) {
 		std::cout << "reallocate\n";
 		// we need to delete this->arr and allocate new_arr
-		T* new_arr;
+		pointer new_arr;
 		size_t new_cpt = other.n *2;
 		size_t new_n = other.n;
 		new_arr = Traits::allocate(allocator, new_cpt, arr);
@@ -402,7 +402,7 @@ vector<T,Allocator>::operator=(vector && other) noexcept(Traits::propagate_on_co
 template<typename T, typename Allocator>
 constexpr typename vector<T,Allocator>::vector<T, Allocator>& 
 vector<T,Allocator>::operator=(std::initializer_list<T> il) {
-	T* new_arr;
+	pointer new_arr;
 	size_t new_cpt = il.size() * 2;
 	size_t new_n = il.size();
 	size_t i{0};

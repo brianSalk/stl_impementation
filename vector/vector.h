@@ -176,7 +176,7 @@ private:
 	// helpers
 	vector(Allocator const& alloc,size_t s,size_t c) : n(s), cpt(c), arr(Traits::allocate(allocator,c)), allocator(alloc) {}
 	template <typename It>
-	iterator __insert(It first, It last, T* ptr, size_t offset) {
+	iterator __insert(It first, It last, pointer ptr, size_t offset) {
 		size_t i = 0;
 		for (auto it = first; it != last; ++it) {
 			Traits::construct(allocator, arr + i + offset, *it);
@@ -215,7 +215,7 @@ private:
 	size_t i{0};
 	if (n == cpt) {
 		size_t new_cpt = cpt*2;
-		T* new_arr = Traits::allocate(allocator,new_cpt,arr);
+		 pointer new_arr = Traits::allocate(allocator,new_cpt,arr);
 		for (; arr + i != pos.itr_p;++i) {
 			Traits::construct(allocator, new_arr + i, std::move_if_noexcept(arr[i]));
 		}
@@ -245,7 +245,7 @@ private:
 		if (n + count >= cpt) {
 			std::cout << "grower\n";
 			size_t new_cpt = (cpt + count) * 2;
-			T* new_arr = Traits::allocate(allocator,new_cpt,arr);
+			pointer new_arr = Traits::allocate(allocator,new_cpt,arr);
 
 			// just do a regular copy to new_arr
 			for (   ;arr + i != pos.itr_p;++i) {
@@ -286,7 +286,7 @@ private:
 		if (n + count > cpt) {
 			std::cout << "grower\n";
 			size_t new_cpt = (cpt + count) * 2;
-			T* new_arr = Traits::allocate(allocator,new_cpt,arr);
+			pointer new_arr = Traits::allocate(allocator,new_cpt,arr);
 
 			// just do a regular copy to new_arr
 			for (   ;arr + i != pos.itr_p;++i) {
@@ -339,7 +339,7 @@ private:
 		}
 		// shift remaining elements after range to the left by num_destroyed
 		n -= num_destroyed;
-		iterator curr(const_cast<T*>(first.itr_p));
+		iterator curr(const_cast<pointer>(first.itr_p));
 		for (; curr != end(); ++curr) {
 			*curr = std::move_if_noexcept(*(curr+num_destroyed));
 			Traits::destroy(allocator, (curr+num_destroyed).itr_p);
@@ -366,7 +366,7 @@ private:
 			} else {
 				std::cout << "realloc\n";
 				// reallocate
-				T* new_arr;
+				pointer new_arr;
 				size_t new_cpt = new_size * 2;
 				try {
 					new_arr = Traits::allocate(allocator, new_cpt, arr);
