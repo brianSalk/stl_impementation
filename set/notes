@@ -1,0 +1,10 @@
+insertion:
+starts just like regulare insertion.
+each new node is RED
+if new_node has red parent, check new_nodes uncle.
+	if new_node's uncle is also red, move the red up.
+	if not, we need to do a rotation.	
+		there are two rotations, right_rotate and left_rotate
+		Q: which node do I call rotate on?
+		Q: are left and right rotate identical except for the fact that I switch the words right and left?		
+		
