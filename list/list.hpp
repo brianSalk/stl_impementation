@@ -10,7 +10,9 @@ namespace brian {
 // constuctors
 // default constructor
 template <typename T, typename Allocator>
-list<T,Allocator>::list() : pre_head(&PRE_HEAD),aft_tail(&AFT_TAIL) {
+list<T,Allocator>::list() : 
+	pre_head(create_base_node()),
+	aft_tail(create_base_node()) {
 	pre_head->next = aft_tail;
 	aft_tail->prev = pre_head;
 	n = 0;
@@ -23,7 +25,7 @@ list<T, Allocator>::list(allocator_type const& alloc) : list() {
 // fill constructor
 template <typename T, typename Allocator> 
 list<T, Allocator>::list(size_type count, T const& val, Allocator const& alloc) : list(alloc) {
-	base_node* curr = pre_head;
+	base_node_pointer curr = pre_head;
 	try {
 		for (size_t i{0};i < count; ++i) {
 			node* new_node = create_node_with_hint(curr,curr,val);
@@ -535,6 +537,8 @@ void list<T,Allocator>::reverse() noexcept {
 template <typename T, typename Allocator>
 list<T,Allocator>::~list() {
 	clear();
+	delete_base_node(pre_head);	
+	delete_base_node(aft_tail);
 }
 template <typename T, typename Allocator>
 size_t list<T,Allocator>::remove(T const& val) {

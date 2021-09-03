@@ -53,11 +53,22 @@ class list {
 	node_allocator_t node_allocator;
 	using Traits = std::allocator_traits<node_allocator_t>;
 	Allocator value_allocator;
-
-	base_node PRE_HEAD;
-	base_node AFT_TAIL;	
-	base_node* aft_tail;
-	base_node* pre_head;
+	using base_node_allocator_t = typename std::allocator_traits<allocator_type>
+		::template rebind_alloc<base_node>;
+	base_node_allocator_t base_node_allocator;
+	using BTraits = std::allocator_traits<base_node_allocator_t>;
+	using base_node_pointer	= typename BTraits::pointer;
+	base_node_pointer create_base_node() {
+		base_node_pointer new_node = BTraits::allocate(base_node_allocator, 1);
+		BTraits::construct(base_node_allocator,new_node);
+		return new_node;
+	}
+	void delete_base_node(base_node_pointer del_node) {
+		BTraits::destroy(base_node_allocator, del_node);
+		BTraits::deallocate(base_node_allocator, del_node, 1);
+	}
+	base_node_pointer aft_tail;
+	base_node_pointer pre_head;
 	size_t n;
 	public:
 	// constructors
