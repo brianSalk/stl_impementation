@@ -28,7 +28,7 @@ list<T, Allocator>::list(size_type count, T const& val, Allocator const& alloc) 
 	base_node_pointer curr = pre_head;
 	try {
 		for (size_t i{0};i < count; ++i) {
-			node* new_node = create_node_with_hint(curr,curr,val);
+			node_pointer new_node = create_node_with_hint(curr,curr,val);
 			curr->next = new_node;
 			curr = curr->next;
 		}
@@ -42,10 +42,10 @@ list<T, Allocator>::list(size_type count, T const& val, Allocator const& alloc) 
 // default fill constructor
 template <typename T, typename Allocator>
 list<T,Allocator>::list(size_t count, Allocator const& alloc) : list(alloc) {
-	base_node* curr = pre_head;
+	base_node_pointer curr = pre_head;
 	try {
 		for (size_t i{0};i < count; ++i) {
-			node* new_node = create_node_with_hint(curr,new_node,curr);
+			node_pointer new_node = create_node_with_hint(curr,new_node,curr);
 			curr->next = new_node;
 			curr = curr->next;
 			std::cout << "loop\n";
@@ -95,14 +95,14 @@ template <typename T, typename Allocator>
 list<T, Allocator>::list(list && other, Allocator const& alloc) :list() {
 	if (alloc != other.get_allocator()) {
 		this->value_allocator = std::move(other.value_allocator);
-		node* other_curr = static_cast<node*>(other.pre_head->next);	
-		base_node* this_curr = this->pre_head;
+		node_pointer other_curr = static_cast<node_pointer>(other.pre_head->next);	
+		base_node_pointer this_curr = this->pre_head;
 		try {
 			while (other_curr != other.end()) {
-				node* new_node = create_node_with_hint(this_curr,this_curr,std::move(other_curr->val));
+				node_pointer new_node = create_node_with_hint(this_curr,this_curr,std::move(other_curr->val));
 				this_curr->next = new_node;
 				this_curr = new_node;
-				other_curr = static_cast<node*>(other_curr->next);
+				other_curr = static_cast<node_pointer>(other_curr->next);
 			}
 		} catch (...) {
 			connect_nodes(this_curr, this->aft_tail);
@@ -126,9 +126,9 @@ size_t list<T,Allocator>::max_size() const noexcept {
 // modifiers
 template <typename T,typename Allocator>
 void list<T,Allocator>::clear() noexcept {
-	base_node* curr = pre_head->next;
+	base_node_pointer curr = pre_head->next;
 	while (curr != end().itr_curr) {
-		base_node* del_node = curr;	
+		base_node_pointer del_node = curr;	
 		curr = curr->next;
 		delete_node(del_node);
 	}
@@ -139,8 +139,8 @@ void list<T,Allocator>::clear() noexcept {
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator 
 list<T,Allocator>::insert(const_iterator pos, T const&val) {
-	base_node* before_node = pos.itr_curr->prev;
-	node* new_node = create_node(val);
+	base_node_pointer before_node = pos.itr_curr->prev;
+	node_pointer new_node = create_node(val);
 	connect_nodes(before_node,new_node);
 	connect_nodes(new_node,pos.itr_curr);
 	++n;
@@ -149,8 +149,8 @@ list<T,Allocator>::insert(const_iterator pos, T const&val) {
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator
 list<T,Allocator>::insert(const_iterator pos, T && val) {
-	node* new_node = create_node(std::move(val));
-	base_node* before_pos = pos.itr_curr->prev;
+	node_pointer new_node = create_node(std::move(val));
+	base_node_pointer before_pos = pos.itr_curr->prev;
 	connect_nodes(before_pos,new_node);
 	connect_nodes(new_node, pos.itr_curr);
 	++n;
@@ -160,21 +160,21 @@ template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator
 list<T,Allocator>::insert(const_iterator pos, size_t count, T const& val) {
 	if (count == 0) return pos.itr_curr;
-	base_node* temp_head = nullptr;
-	base_node* curr;
+	base_node_pointer temp_head = nullptr;
+	base_node_pointer curr;
 	try {
 		temp_head = create_node(val);
 		curr = temp_head;	
-		base_node* temp;	
+		base_node_pointer temp;	
 		for (size_t i = 1; i < count; ++i) {
-			base_node* new_node = create_node(curr,val);
+			base_node_pointer new_node = create_node(curr,val);
 			curr->next = new_node;
 			curr = curr->next;
 		}
 	} catch (...) {
 		// clean up memory here
 		curr = temp_head;
-		base_node* del_node;
+		base_node_pointer del_node;
 		while (curr != nullptr) {
 			del_node = curr;
 			curr = curr->next;
@@ -201,14 +201,14 @@ list<T, Allocator>::insert(const_iterator pos, std::initializer_list<T> il) {
 }
 template <typename T, typename Allocator>
 void list<T, Allocator>::pop_back() {
-	base_node* del_node = aft_tail->prev;
+	base_node_pointer del_node = aft_tail->prev;
 	connect_nodes(del_node->prev, aft_tail);
 	delete_node(del_node);
 	--n;
 }
 template <typename T, typename Allocator>
 void list<T, Allocator>::pop_front() {
-	base_node* del_node = pre_head->next;		
+	base_node_pointer del_node = pre_head->next;		
 	connect_nodes(pre_head, del_node->next);
 	delete_node(del_node);
 	--n;
@@ -217,7 +217,7 @@ void list<T, Allocator>::pop_front() {
 template <typename T, typename Allocator>
 typename list<T, Allocator>::iterator
 list<T, Allocator>::erase(const_iterator pos) {
-	base_node* del_node = pos;
+	base_node_pointer del_node = pos;
 	connect_nodes(pos.itr_curr->prev, pos.itr_curr->next);
 	delete_node(del_node);
 	--n;
@@ -225,8 +225,8 @@ list<T, Allocator>::erase(const_iterator pos) {
 template <typename T, typename Allocator>
 typename list<T,Allocator>::iterator
 list<T,Allocator>::erase(const_iterator first, const_iterator last) {
-	base_node* temp;
-	base_node* end_of_first = first.itr_curr->prev;
+	base_node_pointer temp;
+	base_node_pointer end_of_first = first.itr_curr->prev;
 	size_t to_add = 0;
 	while (first != last) {
 		temp = first.itr_curr;
@@ -315,7 +315,7 @@ void list<T,Allocator>::assign(size_t new_size, T const& val) {
 	size_t count = 0;
 	if (count < new_size) {
 		while (count < new_size && count < n) {
-			static_cast<node*>(curr->next)->val = val;
+			static_cast<node_pointer>(curr->next)->val = val;
 			curr = curr->next;
 			++count;
 		}
@@ -343,14 +343,14 @@ template <typename T, typename Allocator>
 template <typename It, typename std::iterator_traits<It>::pointer>
 void list<T,Allocator>::assign(It first, It last) {
 	// first try to reassign preexisting nodes
-	base_node* curr = pre_head->next;
+	base_node_pointer curr = pre_head->next;
 	while (first != last && curr != end()) {
-		static_cast<node*>(curr)->val = *first;
+		static_cast<node_pointer>(curr)->val = *first;
 		++first;
 		curr = curr->next;
 	}
 	if (first != last) {
-		base_node* temp_head = create_node(*first);
+		base_node_pointer temp_head = create_node(*first);
 		auto new_curr = temp_head;
 		++first;
 		try {
@@ -373,7 +373,7 @@ void list<T,Allocator>::assign(It first, It last) {
 		auto new_curr = curr;
 		curr = curr->prev;
 		while (new_curr != end()) {
-			base_node* del_node = new_curr;	
+			base_node_pointer del_node = new_curr;	
 			new_curr = new_curr->next;
 			delete_node(del_node);
 			--n;
@@ -410,23 +410,23 @@ list<T,Allocator>::operator=(list<T,Allocator> const& other) {
 	}
 	// now it is guarenteed that the allocator can deallocate its own memory
 	// if this is not empty, reuse the nodes
-	base_node* curr = pre_head->next;	
-	base_node* other_curr = other.pre_head->next;
+	base_node_pointer curr = pre_head->next;	
+	base_node_pointer other_curr = other.pre_head->next;
 	while (curr != this->aft_tail && other_curr != other.aft_tail) {
-		static_cast<node*>(curr)->val = static_cast<node*>(other_curr)->val;
+		static_cast<node_pointer>(curr)->val = static_cast<node_pointer>(other_curr)->val;
 		curr = curr->next;
 		other_curr = other_curr->next;
 	}
 	// if the other list is longer, allocate new nodes
 	if (other_curr != other.aft_tail) {
-		base_node* temp_head;
-		base_node* new_curr;
+		base_node_pointer temp_head;
+		base_node_pointer new_curr;
 		try {
-			temp_head = create_node(static_cast<node*>(other_curr)->val);
+			temp_head = create_node(static_cast<node_pointer>(other_curr)->val);
 			new_curr = temp_head;
 			other_curr = other_curr->next;
 			while (other_curr != other.aft_tail) {
-				new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
+				new_curr->next = create_node(new_curr,static_cast<node_pointer>(other_curr)->val);
 				new_curr = new_curr->next;
 				other_curr = other_curr->next;
 			}
@@ -459,23 +459,23 @@ list<T,Allocator>::operator=(list<T,Allocator> && other) {
 		// QUESTION: is this correct? am I allowed to reuse nodes here?
 		// each element must be move-constructed
 		// also, try to refactor this so your code is less WET
-		base_node* curr = pre_head->next;	
-		base_node* other_curr = other.pre_head->next;
+		base_node_pointer curr = pre_head->next;	
+		base_node_pointer other_curr = other.pre_head->next;
 		while (curr != this->aft_tail && other_curr != other.aft_tail) {
-			static_cast<node*>(curr)->val = std::move(static_cast<node*>(other_curr)->val);
+			static_cast<node_pointer>(curr)->val = std::move(static_cast<node_pointer>(other_curr)->val);
 			curr = curr->next;
 			other_curr = other_curr->next;
 		}
 		// if the other list is longer, allocate new nodes
 		if (other_curr != other.aft_tail) {
-			base_node* temp_head;
-			base_node* new_curr;
+			base_node_pointer temp_head;
+			base_node_pointer new_curr;
 			try {
-				temp_head = create_node(std::move(static_cast<node*>(other_curr)->val));
+				temp_head = create_node(std::move(static_cast<node_pointer>(other_curr)->val));
 				new_curr = temp_head;
 				other_curr = other_curr->next;
 				while (other_curr != other.aft_tail) {
-					new_curr->next = create_node(new_curr,static_cast<node*>(other_curr)->val);
+					new_curr->next = create_node(new_curr,static_cast<node_pointer>(other_curr)->val);
 					new_curr = new_curr->next;
 					other_curr = other_curr->next;
 				}
@@ -517,19 +517,19 @@ template <typename T, typename Allocator>
 void list<T,Allocator>::reverse() noexcept {
 	std::cout << "rev\n";
 	if (size() < 2) return;
-	base_node* a=pre_head->next,*b,*c;
-	base_node* new_end = a;
+	base_node_pointer a=pre_head->next,*b,*c;
+	base_node_pointer new_end = a;
 	b = a->next;
 	c = b->next;
 
 	while (c != aft_tail) {
-		std::cout << static_cast<node*>(a)->val << ' ';
+		std::cout << static_cast<node_pointer>(a)->val << ' ';
 		connect_nodes(b,a);
 		a = b;
 		b = c;
 		c = c->next;
 	}
-	std::cout << static_cast<node*>(b)->val << '\n';
+	std::cout << static_cast<node_pointer>(b)->val << '\n';
 	connect_nodes(b,a);
 	connect_nodes(new_end,aft_tail);
 	connect_nodes(pre_head,b);
@@ -568,25 +568,25 @@ void list<T,Allocator>::swap(list& other) noexcept(std::allocator_traits<Allocat
 }
 template <typename T, typename Allocator>
 void list<T,Allocator>::merge(list & other) {
-	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail, [](T const& a, T const& b){return a < b;});
+	__merge(static_cast<node_pointer>(other.pre_head->next), other.aft_tail, [](T const& a, T const& b){return a < b;});
 }
 
 template <typename T, typename Allocator>
 void list<T,Allocator>::merge(list && other) {
-	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail, [](T const& a, T const& b){return a < b;});
+	__merge(static_cast<node_pointer>(other.pre_head->next), other.aft_tail, [](T const& a, T const& b){return a < b;});
 }
 template <typename T, typename Allocator>
 template <typename Cmp>
 requires std::predicate<Cmp,T,T>
 void list<T,Allocator>::merge(list& other,Cmp cmp) {
-	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail,cmp);
+	__merge(static_cast<node_pointer>(other.pre_head->next), other.aft_tail,cmp);
 }
 
 template <typename T, typename Allocator>
 template <typename Cmp>
 requires std::predicate<Cmp,T,T>
 void list<T,Allocator>::merge(list&& other,Cmp cmp) {
-	__merge(static_cast<node*>(other.pre_head->next), other.aft_tail,cmp);
+	__merge(static_cast<node_pointer>(other.pre_head->next), other.aft_tail,cmp);
 }
 template <typename T, typename Allocator>
 void list<T,Allocator>::splice(const_iterator pos, list& other) {
