@@ -7,4 +7,5 @@ if new_node has red parent, check new_nodes uncle.
 		there are two rotations, right_rotate and left_rotate
 		Q: which node do I call rotate on?
 		Q: are left and right rotate identical except for the fact that I switch the words right and left?		
+I either need to create a new nil node to be the leaf istead of reusing the same one, or make my code able to deal with nullptr.
 		
