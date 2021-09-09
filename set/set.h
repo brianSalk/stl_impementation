@@ -48,7 +48,7 @@ private:
 	using node_pointer = typename Traits::pointer;
 	using base_node_pointer = typename BTraits::pointer;
 	size_t n;
-	node_pointer root;
+	base_node_pointer root;
 	base_node_pointer NIL;
 	struct base_node {
 		base_node_pointer left, right, parent;
@@ -66,8 +66,18 @@ public:
 	set();
 	/*modifiers*/
 	std::pair<iterator,bool> insert(Key const& val);
+	~set();
 	/*observers*/
 	/*debuggers*/
+	void PATH_TO(Key const& val) {
+		base_node_pointer curr = root;
+		while (curr != NIL) {
+			std::cout << static_cast<node_pointer>(curr)->val << ' ';
+			if (val < static_cast<node_pointer>(curr)->val) { curr = curr->left; }
+			else { curr = curr->left; }
+		}	
+	}
+	void ROOT_DUMP() { std::cout << static_cast<node_pointer>(root)->val; }
 	void DUMP() {
 		std::stack<base_node_pointer> s;
 		base_node_pointer curr = root;
@@ -93,7 +103,10 @@ private:
 		using reference = std::conditional_t<Is_Const,set::const_reference, set::reference>;
 		using pointer = std::conditional_t<Is_Const, set::const_pointer, set::pointer>;
 		set_iterator(set_iterator const&) = default;
+		template <bool Was_Const, typename = std::enable_if_t<!Was_Const && Is_Const,int*>>
+		set_iterator(set_iterator<Was_Const> const& i) : itr_curr(i) {}
 		set_iterator(base_node_pointer p) : itr_curr(p) {}
+
 	private:
 		base_node_pointer itr_curr;
 	};
@@ -112,6 +125,93 @@ private:
 		BTraits::construct(base_node_allocator, new_base_node);
 		new_base_node->color = Color::BLACK;
 		return new_base_node;
+	}
+	void delete_node(node_pointer curr) {
+		Traits::destroy(node_allocator, curr);
+		Traits::deallocate(node_allocator, curr, 1);
+	}
+	void rotate_right(base_node_pointer x) {
+		// make x right child of x's left child
+		base_node_pointer y = x->left;
+		x->left = y->right;
+		if (y->right != NIL) {
+			y->right->parent = x;
+		}
+		y->parent = x->parent;
+		if (x->parent == NIL) {
+			root = y;
+		}
+		else if (x == x->parent->right) {
+			x->parent->right = y;
+		}
+		else {
+			x->parent->left = y;
+		}
+		y->right = x;
+		x->parent = y;
+	}
+	void rotate_left(base_node_pointer x) {
+		// make x left child of x's right child
+		base_node_pointer y = x->right;
+		x->right = y->left;
+		if (y->left != NIL) {
+			y->left->parent = x;
+		}
+		y->parent = x->parent;
+		if (x->parent == NIL) {
+			root = y;
+		}
+		else if (x == x->parent->left) {
+			x->parent->left = y;
+		}
+		else {
+			x->parent->right = y;
+		}
+		y->left = x;
+		x->parent = y;
+	}
+
+	void fix_insert(base_node_pointer curr) {
+		while (curr->parent->color == Color::RED) {
+			if (curr->parent == curr->parent->parent->left) {
+				base_node_pointer uncle = curr->parent->parent->right;
+
+				if (uncle->color == Color::RED) {
+					curr->parent->color = Color::BLACK;
+					uncle->color = Color::BLACK;
+					curr->parent->parent->color = Color::RED;
+					curr = curr->parent->parent;
+				}
+				else {
+					if (curr == curr->parent->right) {
+						curr = curr->parent;
+						rotate_left(curr);
+					}
+					curr->parent->color = Color::BLACK;
+					curr->parent->parent->color = Color::RED;
+					rotate_right(curr->parent->parent);
+				}
+			}
+			else {
+				base_node_pointer uncle = curr->parent->parent->left;
+
+				if (uncle->color == Color::RED) {
+					curr->parent->color = Color::BLACK;
+					uncle->color = Color::BLACK;
+					curr->parent->parent->color = Color::RED;
+					curr = curr->parent->parent;
+				}
+				else {
+					if (curr == curr->parent->left) {
+						curr = curr->parent;
+						rotate_right(curr);
+					}
+					curr->parent->color = Color::BLACK;
+					curr->parent->parent->color = Color::RED;
+					rotate_left(curr->parent->parent);
+				}
+			}
+		}
 	}
 
 }; // END CLASS SET
