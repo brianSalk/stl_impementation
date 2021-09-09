@@ -67,6 +67,7 @@ public:
 	set();
 	/*modifiers*/
 	std::pair<iterator,bool> insert(Key const& val);
+	std::pair<iterator,bool> insert(Key && val);
 	~set();
 	/*observers*/
 	/*debuggers*/
@@ -131,47 +132,70 @@ private:
 		Traits::destroy(node_allocator, curr);
 		Traits::deallocate(node_allocator, curr, 1);
 	}
-	void rotate_right(base_node_pointer x) {
-		// make x right child of x's left child
-		base_node_pointer y = x->left;
-		x->left = y->right;
-		if (y->right != NIL) {
-			y->right->parent = x;
+	void rotate_right(base_node_pointer curr) {
+		// make curr right child of curr's left child
+		base_node_pointer left_child = curr->left;
+		curr->left = left_child->right;
+		if (left_child->right != NIL) {
+			left_child->right->parent = curr;
 		}
-		y->parent = x->parent;
-		if (x->parent == NIL) {
-			root = y;
+		left_child->parent = curr->parent;
+		if (curr->parent == NIL) {
+			root = left_child;
 		}
-		else if (x == x->parent->right) {
-			x->parent->right = y;
-		}
-		else {
-			x->parent->left = y;
-		}
-		y->right = x;
-		x->parent = y;
-	}
-	void rotate_left(base_node_pointer x) {
-		// make x left child of x's right child
-		base_node_pointer y = x->right;
-		x->right = y->left;
-		if (y->left != NIL) {
-			y->left->parent = x;
-		}
-		y->parent = x->parent;
-		if (x->parent == NIL) {
-			root = y;
-		}
-		else if (x == x->parent->left) {
-			x->parent->left = y;
+		else if (curr == curr->parent->right) {
+			curr->parent->right = left_child;
 		}
 		else {
-			x->parent->right = y;
+			curr->parent->left = left_child;
 		}
-		y->left = x;
-		x->parent = y;
+		left_child->right = curr;
+		curr->parent = left_child;
 	}
-
+	void rotate_left(base_node_pointer curr) {
+		// make curr left child of curr's right child
+		base_node_pointer right_child = curr->right;
+		curr->right = right_child->left;
+		if (right_child->left != NIL) {
+			right_child->left->parent = curr;
+		}
+		right_child->parent = curr->parent;
+		if (curr->parent == NIL) {
+			root = right_child;
+		}
+		else if (curr == curr->parent->left) {
+			curr->parent->left = right_child;
+		}
+		else {
+			curr->parent->right = right_child;
+		}
+		right_child->left = curr;
+		curr->parent = right_child;
+	}
+	std::pair<iterator, bool> __insert(Key && val) {
+		if (root == nullptr) {
+			root = create_node(val);
+			root->parent = NIL;
+			root->color = Color::BLACK;
+			n = 1;
+			return {iterator(root), true};
+		}
+		base_node_pointer curr = root, prev;
+		while (curr != NIL) {
+			prev = curr;
+			if (comp(val,static_cast<node_pointer>(curr)->val)) { curr = curr->left; }
+			else if (comp(static_cast<node_pointer>(curr)->val,val)) { curr = curr->right; }
+			else { return {iterator(curr), false };}
+		}
+		base_node_pointer new_node = create_node(std::forward<Key>(val));
+		new_node->parent = prev;
+		if (comp(val,static_cast<node_pointer>(prev)->val)) { prev->left = new_node; }
+		else { prev->right = new_node; }
+		fix_insert(new_node);
+		this->root->color = Color::BLACK;
+		++n;
+		return {iterator(new_node), true};
+	}
 	void fix_insert(base_node_pointer curr) {
 		while (curr->parent->color == Color::RED) {
 			if (curr->parent == curr->parent->parent->left) {

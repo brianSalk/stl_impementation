@@ -1,4 +1,5 @@
 #include "set.h"
+#include <utility>
 namespace brian {
 template<typename Key, typename Comp, typename Allocator>
 set<Key,Comp,Allocator>::set() {
@@ -10,29 +11,12 @@ set<Key,Comp,Allocator>::set() {
 }
 template<typename Key, typename Comp, typename Allocator>
 std::pair<typename set<Key,Comp,Allocator>::iterator,bool> set<Key,Comp,Allocator>::insert(Key const& val) {
-	if (root == nullptr) {
-		root = create_node(val);
-		root->parent = NIL;
-		root->color = Color::BLACK;
-		n = 1;
-		return {iterator(root), true};
-	}
-	base_node_pointer curr = root, prev;
-	while (curr != NIL) {
-		prev = curr;
-		if (comp(val,static_cast<node_pointer>(curr)->val)) { curr = curr->left; }
-		else if (comp(static_cast<node_pointer>(curr)->val,val)) { curr = curr->right; }
-		else { return {iterator(curr), false };}
-	}
-	base_node_pointer new_node = create_node(val);
-	new_node->parent = prev;
-	if (comp(val,static_cast<node_pointer>(prev)->val)) { prev->left = new_node; }
-	else { prev->right = new_node; }
-	fix_insert(new_node);
-	this->root->color = Color::BLACK;
-	++n;
-	return {iterator(new_node), true};
-
+	return __insert(std::forward<Key>(val));
+}
+template <typename Key, typename Comp, typename Allocator>
+std::pair<typename set<Key,Comp,Allocator>::iterator, bool>
+set<Key,Comp,Allocator>::insert(Key && val) {
+	return __insert(std::forward<Key>(val));
 }
 template<typename Key, typename Comp, typename Allocator>
 set<Key,Comp,Allocator>::~set() {
