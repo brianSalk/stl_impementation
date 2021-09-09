@@ -37,6 +37,7 @@ public:
 	using node_type = node;
 	using insert_return_type = insert_return_type_template<iterator, node_type>;
 private:
+	Comp comp;
 	allocator_type value_allocator;
 	// private aliases, for sanity purposes
 	using node_alloc_t = typename std::allocator_traits<Allocator>:: template rebind_alloc<node>;
@@ -73,7 +74,7 @@ public:
 		base_node_pointer curr = root;
 		while (curr != NIL) {
 			std::cout << static_cast<node_pointer>(curr)->val << ' ';
-			if (val < static_cast<node_pointer>(curr)->val) { curr = curr->left; }
+			if (comp(val,static_cast<node_pointer>(curr)->val)) { curr = curr->left; }
 			else { curr = curr->left; }
 		}	
 	}

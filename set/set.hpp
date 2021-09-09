@@ -20,13 +20,13 @@ std::pair<typename set<Key,Comp,Allocator>::iterator,bool> set<Key,Comp,Allocato
 	base_node_pointer curr = root, prev;
 	while (curr != NIL) {
 		prev = curr;
-		if (val < static_cast<node_pointer>(curr)->val) { curr = curr->left; }
-		else if (val > static_cast<node_pointer>(curr)->val) { curr = curr->right; }
+		if (comp(val,static_cast<node_pointer>(curr)->val)) { curr = curr->left; }
+		else if (comp(static_cast<node_pointer>(curr)->val,val)) { curr = curr->right; }
 		else { return {iterator(curr), false };}
 	}
 	base_node_pointer new_node = create_node(val);
 	new_node->parent = prev;
-	if (val < static_cast<node_pointer>(prev)->val) { prev->left = new_node; }
+	if (comp(val,static_cast<node_pointer>(prev)->val)) { prev->left = new_node; }
 	else { prev->right = new_node; }
 	fix_insert(new_node);
 	this->root->color = Color::BLACK;
