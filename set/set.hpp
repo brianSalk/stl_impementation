@@ -37,4 +37,24 @@ set<Key,Comp,Allocator>::~set() {
 	BTraits::deallocate(base_node_allocator, NIL, 1);
 }
 
+template<typename Key, typename Comp, typename Allocator>
+typename set<Key,Comp,Allocator>::iterator 
+set<Key,Comp,Allocator>::insert(const_iterator hint, Key const& val) {
+	// first try to insert directly before the hint
+	/* I have no idea how to do this */			
+	// if insertition before hint fails, do regular insert
+	return __insert(std::forward<Key>(val)).first;
+}
+template<typename Key, typename Comp, typename Allocator>
+bool set<Key,Comp,Allocator>::empty() const noexcept {
+	return root == nullptr;
+}
+template<typename Key, typename Comp, typename Allocator>
+size_t set<Key,Comp,Allocator>::size() const noexcept {
+	return n;
+}
+template<typename Key, typename Comp, typename Allocator>
+size_t set<Key,Comp,Allocator>::max_size() const noexcept {
+	return Traits::max_size(node_allocator);
+}
 }

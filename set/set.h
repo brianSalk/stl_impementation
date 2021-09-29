@@ -68,8 +68,13 @@ public:
 	/*modifiers*/
 	std::pair<iterator,bool> insert(Key const& val);
 	std::pair<iterator,bool> insert(Key && val);
+	iterator insert(const_iterator hint, Key const& val);
 	~set();
 	/*observers*/
+	[[ nodiscard ]]
+	bool empty() const noexcept;
+	size_t size() const noexcept;
+	size_t max_size() const noexcept;
 	/*debuggers*/
 	void PATH_TO(Key const& val) {
 		base_node_pointer curr = root;
@@ -108,6 +113,10 @@ private:
 		template <bool Was_Const, typename = std::enable_if_t<!Was_Const && Is_Const,int*>>
 		set_iterator(set_iterator<Was_Const> const& i) : itr_curr(i) {}
 		set_iterator(base_node_pointer p) : itr_curr(p) {}
+
+		reference operator*() {
+			return itr_curr->val;
+		}
 
 	private:
 		base_node_pointer itr_curr;
