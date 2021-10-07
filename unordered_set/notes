@@ -1,0 +1,5 @@
+now is decision time:
+For my hashset, I will need to create an array of type base_node_pointer, and each element in the array is a bucket that is basically a linked_list of nodes
+when I create the initial array, there will be some buckets that are empty, so should I fill those buckets with base_node_pointer, or should I fill them with nullptr?
+
+
